@@ -35,12 +35,12 @@
 ## 配置文件示例 (json文件)
 
     {
-      "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
-      "bvid": "BV1FQ4y1R7nv",
-      "timeline": "./data/timeline.csv",
-      "offsets": [-10],
-      "cover": "这是一个自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-      "publish": false
+        "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
+        "bvid": "BV1FQ4y1R7nv",
+        "timeline": "./data/timeline.csv",
+        "offsets": [-10],
+        "cover": "这是一个自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
+        "publish": false
     }
 
 ## 配置文件说明
