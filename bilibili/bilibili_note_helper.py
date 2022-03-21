@@ -2,13 +2,16 @@ import time
 import json
 import csv
 from urllib.parse import urlencode
+
+from typing import Tuple, List
+
 from .timeline import Timeline, TimelineItem
 from .video import VideoInfo, VideoPartInfo
 from .agent import BilibiliAgent
 
 class BilibiliNoteHelper:
     @staticmethod
-    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> tuple[list, int]:
+    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -58,7 +61,7 @@ class BilibiliNoteHelper:
         return (obj, len(item.tag) + 8)
 
     @staticmethod
-    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> tuple[list, int]:
+    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴json对象
 
         Args:
@@ -146,7 +149,7 @@ class BilibiliNoteHelper:
             return Timeline(items)
 
     @staticmethod
-    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: list[int], cover: str, publish: bool) -> None:
+    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool) -> None:
         """发送笔记
 
         Args:
