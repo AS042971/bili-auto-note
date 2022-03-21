@@ -1,3 +1,6 @@
+from typing import List
+
+
 class VideoPartInfo:
   def __init__(self, cid: int, index: int, cidCount: int, title: str, duration: int) -> None:
     """视频分P信息
@@ -15,7 +18,7 @@ class VideoPartInfo:
     self.duration = duration
 
 class VideoInfo:
-  def __init__(self, aid: int, pic: str, title: str, parts: list[VideoPartInfo]) -> None:
+  def __init__(self, aid: int, pic: str, title: str, parts: List[VideoPartInfo]) -> None:
     """视频信息
 
     Args:
