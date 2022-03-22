@@ -60,7 +60,19 @@
 
 ## 使用
 
-执行 `python bili_note.py <配置文件路径>` 即可。
+### 生成时间轴（未完成）
+
+* 新建存放原始文本轴的文本文件（一般放在 `data` 目录下）
+* 修改 `config/gen_timeline.json`, 填入这些文本文件的路径和这些分p对应的偏移量，同时填入输出csv路径
+* 执行 `python gen_timeline.py` 即可生成转换的 csv 文件
+* 如果配置文件在其他位置，执行 `python gen_timeline.py <配置文件路径>`
+
+### 发布时间轴
+
+* 确保已拥有主时间轴的 csv 文件
+* 修改 `config/pub_timeline.json`, 填入 cookie 和视频信息等
+* 执行 `python pub_timeline.py` 将时间轴发布至B站
+* 如果配置文件在其他位置，执行 `python pub_timeline.py <配置文件路径>`
 
 ## 更新计划
 
