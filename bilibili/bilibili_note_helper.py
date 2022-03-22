@@ -8,96 +8,9 @@ from typing import Tuple, List
 from .timeline import Timeline, TimelineItem
 from .video import VideoInfo, VideoPartInfo
 from .agent import BilibiliAgent
+from .timeline_converter import TimelineConverter
 
 class BilibiliNoteHelper:
-    @staticmethod
-    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> Tuple[list, int]:
-        """生成符合Bilibili笔记需求的时间轴条目json对象
-
-        Args:
-            item (TimelineItem): 时间轴条目
-            info (VideoPartInfo): 视频信息
-
-        Returns:
-                list: 对应的json对象
-        """
-        obj = []
-        # 时间胶囊
-        obj.append({
-            "insert": {
-                "tag": {
-                    "cid": info.cid,
-                    "oid_type": 1,
-                    "status": 0,
-                    "index": info.index,
-                    "seconds": item.sec,
-                    "cidCount": 1,
-                    "key": str(round(time.time()*1000)),
-                    "title": "P" + str(info.index),
-                    "epid": 0
-                }
-            }
-        })
-        obj.append({ "insert": "\n" })
-        # 轴引导线
-        obj.append({
-            "attributes": { "color": "#cccccc" },
-            "insert": "  └─ "
-        })
-        # 轴内容
-        if item.highlight:
-            obj.append({
-                "attributes": {
-                    "color": "#ee230d",
-                    "bold": True
-                },
-                "insert": item.tag
-            })
-        else:
-            obj.append({
-                "insert": item.tag
-            })
-        obj.append({ "insert": "\n" })
-        return (obj, len(item.tag) + 8)
-
-    @staticmethod
-    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> Tuple[list, int]:
-        """生成符合Bilibili笔记需求的时间轴json对象
-
-        Args:
-            timeline (Timeline): 时间轴
-            info (VideoPartInfo): 视频信息
-
-        Returns:
-            list: 对应的json对象
-        """
-        obj = []
-        # 标题
-        obj.append({
-            "attributes": {
-                "size": "18px",
-                "background": "#fff359",
-                "bold": True,
-                "align": "center"
-            },
-            "insert": "　　　　" + info.title + "　　　　"
-        })
-        obj.append({
-            "attributes": {
-                "align": "center"
-            },
-            "insert": "\n"
-        })
-        content_len = len(info.title) + 9
-        # 内容
-        for item in timeline.items:
-            (item_obj, item_len) = BilibiliNoteHelper.getTimelineItemJson(item, info)
-            obj.extend(item_obj)
-            content_len += item_len
-        obj.append({ "insert": "\n" })
-        content_len += 1
-        return (obj, content_len)
-
     @staticmethod
     def getVideoPartInfo(cidCount: int, payload: dict) -> VideoPartInfo:
         """从返回的json生成视频分P信息
@@ -131,20 +44,6 @@ class BilibiliNoteHelper:
         cnt = len(payload['pages'])
         parts = [BilibiliNoteHelper.getVideoPartInfo(cnt, part_payload) for part_payload in payload['pages']]
         return VideoInfo(aid, pic, title, parts)
-
-    @staticmethod
-    def loadTimeline(path: str) -> Timeline:
-        # before error:UnicodeDecodeError: 'gbk' codec can't decode byte 0x80 in position 4: illegal multibyte sequence
-        with open(path, "r", encoding="utf-8-sig") as f:
-            csv_l = f.readlines()
-        its = [c.replace("\n", "").split(",") for c in csv_l]
-        for i in range(len(its)):
-            if len(its[i]) >= 3 and its[i][2] == '1':
-                its[i][2] = True
-            else:
-                its[i][2] = False
-        items = [TimelineItem(int(it[0]), it[1], bool(it[2])) for it in its]
-        return Timeline(items)
 
     @staticmethod
     async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool) -> None:
@@ -216,7 +115,7 @@ class BilibiliNoteHelper:
             if len(part_timeline.items) == 0:
                 continue
 
-            (timeline_obj, timeline_len) = BilibiliNoteHelper.getTimelineJson(part_timeline, video_part)
+            (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
             submit_obj.extend(timeline_obj)
             submit_len += timeline_len
 

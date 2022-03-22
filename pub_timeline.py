@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-from bilibili import BilibiliAgent, Timeline, TimelineItem, BilibiliNoteHelper, VideoPartInfo
+from bilibili import BilibiliAgent, Timeline, TimelineItem, BilibiliNoteHelper, TimelineConverter
 import asyncio
 import sys
 import json
@@ -12,7 +12,7 @@ async def main(config_path: str):
         offsets = json_data['offsets']
         cover = json_data['cover']
         publish = json_data['publish']
-        timeline = BilibiliNoteHelper.loadTimeline(json_data['timeline'])
+        timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
         await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
 
 if __name__ == '__main__':
