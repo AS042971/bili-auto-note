@@ -1,3 +1,4 @@
+import os
 import time
 import json
 import csv
@@ -46,7 +47,7 @@ class BilibiliNoteHelper:
         return VideoInfo(aid, pic, title, parts)
 
     @staticmethod
-    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool) -> None:
+    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool, confirmed: bool = False) -> None:
         """发送笔记
 
         Args:
@@ -56,6 +57,7 @@ class BilibiliNoteHelper:
             offsets (list[int]): 每个分P的开场偏移
             cover (str): 发送到评论区的字符串
             publish (bool): 是否直接发布
+            confirmed (bool): 发布前是否不用二次确认
         """
         # 获取视频信息
         video_info_res = await agent.get(
@@ -88,14 +90,27 @@ class BilibiliNoteHelper:
 
         # 发布笔记
         # 检查偏移量和分P数是否一致
+        if not confirmed:
+            print('请确认以下信息是否准确')
+            print(f'  视频名: {video_info.title}')
+            print(f'  评论内容: \n{cover}')
+            print('  配置: '+('笔记会自动发布' if publish else '需要手动发布笔记'))
+
         if len(offsets) != len(video_info.parts):
-            print(f'偏移量{offsets}数量和视频分段数量({len(video_info.parts)})不一致！')
+            print(f'  注意: 偏移量{offsets}数量和视频分段数量({len(video_info.parts)})不一致！')
             if (len(offsets) < len(video_info.parts)):
                 offsets = offsets + ['auto'] * (len(video_info.parts)) - len(offsets)
+
+        if not confirmed:
+            command = input('请确认以上信息准确。是否发布？[y/n]')
+            if command != 'Y' and command != 'y':
+                return
 
         current_timestamp = 0
         submit_obj = []
         submit_len = 0
+
+        # 插入每个分P的轴
         for video_part_index in range(0, len(video_info.parts)):
             # 遍历每个分P进行计算
             video_part = video_info.parts[video_part_index]
