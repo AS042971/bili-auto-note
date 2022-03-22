@@ -15,10 +15,21 @@ async def main(config_path: str):
         await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
 
 if __name__ == '__main__':
+    # add default config filepath
     if len(sys.argv) == 1:
-        print('Usage: bilinote.py <path to config file>')
-        sys.exit(-1)
+        st = "./data/config.json"
+        print(f'Loading default config file: {st}')
+        try:
+            with open(st, "r", encoding="utf-8") as f:
+                pass
+            print(f'Successfully loaded {st}')
+        except FileNotFoundError as e_f:
+            print(e_f)
+            print('Usage: bilinote.py <path to config file>')
+            sys.exit(-1)
+    else:
+        st = sys.argv[1]
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(main(sys.argv[1]))
+    loop.run_until_complete(main(st))

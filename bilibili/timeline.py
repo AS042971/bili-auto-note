@@ -1,5 +1,7 @@
 from enum import Enum, unique
-from typing import Iterator
+from typing import Iterator, List
+
+
 @unique
 class TimelineType(Enum):
     NORMAL = ''
@@ -16,8 +18,8 @@ class Member(Enum):
 
 class TimelineItem:
     def __init__(self,
-            sec: int, tag: str, highlight: bool = False,
-            type: TimelineType = TimelineType.NORMAL, members: list[Member] = []) -> None:
+                 sec: int, tag: str, highlight: bool = False,
+                 type: TimelineType = TimelineType.NORMAL, members: List[Member] = []) -> None:
         """时间轴条目
 
         Args:
@@ -51,7 +53,7 @@ class TimelineItem:
         return time + ' ' + self.tag
 
 class Timeline:
-    def __init__(self, items: list[TimelineItem]) -> None:
+    def __init__(self, items: List[TimelineItem]) -> None:
         """生成时间轴
 
         Args:

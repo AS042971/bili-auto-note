@@ -2,13 +2,16 @@ import time
 import json
 import csv
 from urllib.parse import urlencode
+
+from typing import Tuple, List
+
 from .timeline import Timeline, TimelineItem
 from .video import VideoInfo, VideoPartInfo
 from .agent import BilibiliAgent
 
 class BilibiliNoteHelper:
     @staticmethod
-    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> tuple[list, int]:
+    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -58,7 +61,7 @@ class BilibiliNoteHelper:
         return (obj, len(item.tag) + 8)
 
     @staticmethod
-    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> tuple[list, int]:
+    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴json对象
 
         Args:
@@ -131,22 +134,20 @@ class BilibiliNoteHelper:
 
     @staticmethod
     def loadTimeline(path: str) -> Timeline:
-        with open(path) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            items = []
-            for row in csv_reader:
-                if (len(row) <= 2):
-                    print(f'row error: {row}')
-                sec = int(row[0])
-                tag = row[1]
-                highlight = False
-                if len(row) >= 3 and row[2] == '1':
-                    highlight = True
-                items.append(TimelineItem(sec, tag, highlight))
-            return Timeline(items)
+        # before error:UnicodeDecodeError: 'gbk' codec can't decode byte 0x80 in position 4: illegal multibyte sequence
+        with open(path, "r", encoding="utf-8") as f:
+            csv_l = f.readlines()
+        its = [c.replace("\n", "").split(",") for c in csv_l]
+        for i in range(len(its)):
+            if len(its[i]) >= 3 and its[i][2] == '1':
+                its[i][2] = True
+            else:
+                its[i][2] = False
+        items = [TimelineItem(int(it[0]), it[1], bool(it[2])) for it in its]
+        return Timeline(items)
 
     @staticmethod
-    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: list[int], cover: str, publish: bool) -> None:
+    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool) -> None:
         """发送笔记
 
         Args:
