@@ -1,8 +1,8 @@
 {
     "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
-    "bvid": "BV1FQ4y1R7nv",
+    "bvid": "BV15U4y1d7TX",
     "timeline": "./data/timeline.csv",
-    "offsets": [-10],
-    "cover": "这是一个自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-    "publish": false
+    "offsets": [-52, "auto", -52, "auto"],
+    "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
+    "publish": true
 }
