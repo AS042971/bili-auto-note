@@ -135,7 +135,7 @@ class BilibiliNoteHelper:
     @staticmethod
     def loadTimeline(path: str) -> Timeline:
         # before error:UnicodeDecodeError: 'gbk' codec can't decode byte 0x80 in position 4: illegal multibyte sequence
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             csv_l = f.readlines()
         its = [c.replace("\n", "").split(",") for c in csv_l]
         for i in range(len(its)):
