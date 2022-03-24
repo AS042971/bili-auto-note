@@ -14,6 +14,7 @@ async def main(config_path: str):
         publish = json_data['publish']
         timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
         await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
+        await agent.close()
 
 if __name__ == '__main__':
     # add default config filepath

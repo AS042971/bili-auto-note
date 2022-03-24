@@ -103,7 +103,7 @@ class BilibiliNoteHelper:
                 offsets = offsets + ['auto'] * (len(video_info.parts)) - len(offsets)
 
         if not confirmed:
-            command = input('请确认以上信息准确。是否发布？[y/n]')
+            command = input('请确认以上信息准确。是否执行？[y/n]')
             if command != 'Y' and command != 'y':
                 return
 
@@ -149,4 +149,7 @@ class BilibiliNoteHelper:
             "auto_comment": 1 if publish else 0
         }
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)
-        print(submit_res)
+        if submit_res['note_id']:
+            print(f'执行成功，笔记ID为：{submit_res["note_id"]}')
+        else:
+            print(f'执行失败，返回值为{submit_res}')

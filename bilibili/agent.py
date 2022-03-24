@@ -35,3 +35,6 @@ class BilibiliAgent:
             res_json = await res.json()
             BilibiliAgent._check(url, res_json)
             return res_json.get("data", {})
+
+    async def close(self) -> None:
+        await self.session.close()
