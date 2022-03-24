@@ -93,8 +93,9 @@ class BilibiliNoteHelper:
         if not confirmed:
             print('请确认以下信息是否准确')
             print(f'  视频名: {video_info.title}')
-            print(f'  评论内容: \n{cover}')
             print('  配置: '+('笔记会自动发布' if publish else '需要手动发布笔记'))
+            if publish:
+                print(f'  自动发布的评论内容: \n{cover}')
 
         if len(offsets) != len(video_info.parts):
             print(f'  注意: 偏移量{offsets}数量和视频分段数量({len(video_info.parts)})不一致！')

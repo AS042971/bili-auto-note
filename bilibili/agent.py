@@ -2,14 +2,15 @@ import re
 import aiohttp
 
 class BilibiliAgent:
-    def __init__(self, cookie: str) -> None:
-        self.uid = None
-        self.csrf = None
-        if "bili_jct=" in cookie and "SESSDATA=" in cookie:
-            self.csrf = re.search(r"bili_jct=([0-9a-zA-Z]{32})", cookie).group(1).strip()
-            self.cookie = cookie
-        else:
-            raise Exception("cookie 无效\n请保证有SESSDATA字段和bili_jct字段")
+    def __init__(self, cookie: str = None) -> None:
+        self.csrf = ''
+        self.cookie = ''
+        if cookie != None:
+            if "bili_jct=" in cookie and "SESSDATA=" in cookie:
+                self.csrf = re.search(r"bili_jct=([0-9a-zA-Z]{32})", cookie).group(1).strip()
+                self.cookie = cookie
+            else:
+                print("警告: cookie 无效，部分功能可能不可用\n请保证有SESSDATA字段和bili_jct字段")
         self.headers = {
             "Referer": "https://www.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
