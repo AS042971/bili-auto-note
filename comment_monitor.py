@@ -16,6 +16,7 @@ async def main(bvid: str, uname: str):
     print(f'开始监视 {video_info.title} 的评论区...')
     wait_cnt = 0
     last_reply_id = 0
+    shown_ids = []
 
     while True:
         comment_res = await agent.get(
@@ -30,13 +31,17 @@ async def main(bvid: str, uname: str):
         new_reply = comment_res['replies'][0]
         new_reply_id = new_reply['rpid']
         if new_reply_id != last_reply_id:
+            # 评论区发生了更新
+            for reply in comment_res['replies']:
+                if reply['rpid'] == last_reply_id:
+                    break
+                reply_uname = reply['member']['uname']
+                if reply_uname == uname:
+                    print('==============================')
+                    print(f'已捕获到 {uname} 的评论：')
+                    print(reply['content']['message'])
+                    print('==============================')
             last_reply_id = new_reply_id
-            new_reply_uname = new_reply['member']['uname']
-            if new_reply_uname == uname:
-                print('==============================')
-                print(f'已捕获到 {uname} 的评论：')
-                print(new_reply['content']['message'])
-                print('==============================')
         for i in range(12):
             await asyncio.sleep(5)
             print('*', end='', flush=True)
