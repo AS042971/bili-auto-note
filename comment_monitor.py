@@ -15,7 +15,6 @@ async def main(bvid: str, uname: str):
 
     print(f'开始监视 {video_info.title} 的评论区...')
     wait_cnt = 0
-    last_reply_id = 0
     shown_ids = []
 
     while True:
@@ -27,22 +26,35 @@ async def main(bvid: str, uname: str):
                 # 2是最新评论，3是热门评论
                 "mode": 2
         })
-
-        new_reply = comment_res['replies'][0]
-        new_reply_id = new_reply['rpid']
-        if new_reply_id != last_reply_id:
-            # 评论区发生了更新
-            for reply in comment_res['replies']:
-                if reply['rpid'] == last_reply_id:
-                    break
-                reply_uname = reply['member']['uname']
-                if reply_uname == uname:
-                    print('==============================')
-                    print(f'已捕获到 {uname} 的评论：')
-                    print(reply['content']['message'])
-                    print('==============================')
-            last_reply_id = new_reply_id
-        for i in range(12):
+        await asyncio.sleep(5)
+        hot_comment_res = await agent.get(
+            "https://api.bilibili.com/x/v2/reply/main",
+            params={
+                "type": 1,
+                "oid":video_info.aid,
+                # 2是最新评论，3是热门评论
+                "mode": 3
+        })
+        all_replies = comment_res['replies'] + hot_comment_res['replies']
+        for reply in all_replies:
+            reply_uname = reply['member']['uname']
+            if reply_uname == uname and reply['rpid'] not in shown_ids:
+                print('==============================')
+                print(f'已捕获到 {uname} 的评论：')
+                print(reply['content']['message'])
+                print('==============================')
+                shown_ids.append(reply['rpid'])
+            if reply['replies']:
+                for sub_reply in reply['replies']:
+                    sub_reply_uname = sub_reply['member']['uname']
+                    if sub_reply_uname == uname and sub_reply['rpid'] not in shown_ids:
+                        print('------------------------------')
+                        print(f'已捕获到 {uname} 的楼中楼回复：')
+                        print(sub_reply['content']['message'])
+                        print('------------------------------')
+                        shown_ids.append(sub_reply['rpid'])
+        print('*', end='', flush=True)
+        for i in range(11):
             await asyncio.sleep(5)
             print('*', end='', flush=True)
         wait_cnt += 1
