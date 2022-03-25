@@ -18,24 +18,25 @@ async def main(bvid: str, uname: str):
     shown_ids = []
 
     while True:
-        comment_res = await agent.get(
-            "https://api.bilibili.com/x/v2/reply/main",
-            params={
-                "type": 1,
-                "oid":video_info.aid,
-                # 2是最新评论，3是热门评论
-                "mode": 2
-        })
-        await asyncio.sleep(5)
-        hot_comment_res = await agent.get(
-            "https://api.bilibili.com/x/v2/reply/main",
-            params={
-                "type": 1,
-                "oid":video_info.aid,
-                # 2是最新评论，3是热门评论
-                "mode": 3
-        })
-        all_replies = comment_res['replies'] + hot_comment_res['replies']
+        if wait_cnt % 2 == 0:
+            comment_res = await agent.get(
+                "https://api.bilibili.com/x/v2/reply/main",
+                params={
+                    "type": 1,
+                    "oid":video_info.aid,
+                    # 2是最新评论，3是热门评论
+                    "mode": 2
+            })
+        else:
+            comment_res = await agent.get(
+                "https://api.bilibili.com/x/v2/reply/main",
+                params={
+                    "type": 1,
+                    "oid":video_info.aid,
+                    # 2是最新评论，3是热门评论
+                    "mode": 3
+            })
+        all_replies = comment_res['replies']
         for reply in all_replies:
             reply_uname = reply['member']['uname']
             if reply_uname == uname and reply['rpid'] not in shown_ids:
@@ -54,11 +55,11 @@ async def main(bvid: str, uname: str):
                         print('------------------------------')
                         shown_ids.append(sub_reply['rpid'])
         print('*', end='', flush=True)
-        for i in range(11):
+        for _ in range(24):
             await asyncio.sleep(5)
             print('*', end='', flush=True)
         wait_cnt += 1
-        print(f' 已持续监控 {wait_cnt} 分钟...')
+        print(f' 已持续监控 {wait_cnt * 2} 分钟...')
 
 if __name__ == '__main__':
     if len(sys.argv) <= 2:
