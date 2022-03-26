@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 import asyncio
 from bilibili import BilibiliNoteHelper, BilibiliAgent

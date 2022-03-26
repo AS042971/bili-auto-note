@@ -17,13 +17,14 @@ async def main(config_path: str):
         if 'watch' in json_data:
             watch = json_data['watch']
         else:
+            print(f'可更新配置文件 {config_path} 增加"watch"字段，用于自动监控视频分P和笔记文件的变化，可参考example目录中的示例')
             watch = False
 
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
             await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
         else:
-            print('请注意，自动监控功能已打开，每次目标视频分P变化时将自动更新笔记，直到目标视频数量和设定偏移量数量相同。')
+            print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
             wait_cnt = 0
             published_parts = []
