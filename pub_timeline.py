@@ -56,7 +56,7 @@ async def main(config_path: str):
                     if new_modify_time != modify_time and not first_time:
                         print('检测到轴更新，将强制进行发布')
                         published_parts = []
-                        modify_time = new_modify_time
+                    modify_time = new_modify_time
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记，需要进行确认
