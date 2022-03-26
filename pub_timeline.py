@@ -9,11 +9,28 @@ import time
 async def main(config_path: str):
     with open(config_path,'r',encoding='utf8') as fp:
         json_data = json.load(fp)
+
+        # 基础信息
         agent = BilibiliAgent(json_data['cookie'])
         bvid = json_data['bvid']
+
+        # 读取偏移量的信息
         offsets = json_data['offsets']
-        cover = json_data['cover']
+        if 'danmakuOffsets' in json_data:
+            danmaku_offsets = json_data['danmakuOffsets']
+        else:
+            danmaku_offsets = []
+
+        if 'ignoreThreshold' in json_data:
+            ignore_threshold = json_data['ignoreThreshold']
+        else:
+            ignore_threshold = 600
+
+        # 读取是否发布的信息
         publish = json_data['publish']
+        cover = json_data['cover']
+
+        # 读取是否监控的信息
         if 'watch' in json_data:
             watch = json_data['watch']
         else:
@@ -22,7 +39,7 @@ async def main(config_path: str):
 
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
+            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -31,7 +48,7 @@ async def main(config_path: str):
             modify_time = 0
             first_time = True
             # 退出循环条件：失败5次/分P数量和标记数量一致且时间轴2小时内均未更新
-            while failed_cnt <= 5 and (len(published_parts) != len(offsets) or modify_time + 7200 > time.time()):
+            while failed_cnt <= 5 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
                 try:
                     wait_cnt += 1
                     print(f'正在开始第 {wait_cnt} 次任务 ...')
@@ -43,16 +60,16 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记，需要进行确认
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, True, published_parts)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection=published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
                         if new_published_parts != published_parts:
-                            print('视频列表更新，已自动更新笔记')
+                            print('已自动更新笔记')
                             published_parts = new_published_parts
                         else:
-                            print('视频列表无变化')
+                            print('视频列表和轴文件均无变化')
                     failed_cnt = 0
                     # 等待2分钟
                     for _ in range(24):

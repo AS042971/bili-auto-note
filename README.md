@@ -74,11 +74,14 @@
 
     {
         "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
-        "bvid": "BV1FQ4y1R7nv",
+        "bvid": "BV15U4y1d7TX",
         "timeline": "./data/timeline.csv",
-        "offsets": [-10],
-        "cover": "这是一个自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-        "publish": false
+        "offsets": [-52, "auto"],
+        "danmakuOffsets": [-52, "auto"],
+        "ignoreThreshold": 600,
+        "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
+        "publish": true,
+        "watch": false
     }
 
 ### 配置文件说明
@@ -88,9 +91,11 @@
 * `timeline`: 时间轴文件路径
 * `offsets`: 目标视频每个分P开始时刻对应的统一时间轴时刻，单位为秒。注意，此处的值可能为负数（比如果统一时间轴以开场对齐，但视频中包含OP时）。
 在offsets中也可以标记`auto`或`skip`，`auto`表示自动叠加上一p的累计时长，`skip`表示跳过这一p
+* `danmakuOffsets`: 如果目标视频是无弹幕版和弹幕版相对应的形式，在这里填写弹幕版相应的时刻。`danmakuOffsets` 非空时，`offsets` 将仅代表无弹幕版的偏移量。识别弹幕版和无弹幕版的原则是分P名称中包含 `弹幕` 并且不包含 `无弹幕`。当弹幕分P和无弹幕分P交错时，程序也可以自动处理。如 `offsets` 和 `danmakuOffsets` 均标记了两个分P，但上传视频只有无弹幕版P1和弹幕版P1，也可以生成正确映射的时间轴。
+* `ignoreThreshold`: 时间短于此值的分P将被忽略，单位为秒，默认为600（即10分钟）。此参数用于处理占位视频。被忽略的视频不会参与到 `offsets` 和 `danmakuOffsets` 的推断中
 * `cover`: 视频转制通过时发送至评论区的文案
 * `publish`: 是否自动发布
-* `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记
+* `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出
 
 ## 小工具：监控评论区
 

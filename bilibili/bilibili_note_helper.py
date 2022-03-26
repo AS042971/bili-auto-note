@@ -48,7 +48,15 @@ class BilibiliNoteHelper:
         return VideoInfo(aid, pic, title, parts)
 
     @staticmethod
-    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool, confirmed: bool = False, previousPartCollection: List[str] = []) -> List[str]:
+    async def sendNote(
+            timeline: Timeline, agent: BilibiliAgent,
+            bvid: str, offsets: List[int],
+            cover: str, publish: bool,
+            confirmed: bool = False,
+            previousPartCollection: List[str] = [],
+            ignoreThreshold: int = 600,
+            danmakuOffsets: List[int] = []
+        ) -> List[str]:
         """发送笔记
 
         Args:
@@ -58,7 +66,10 @@ class BilibiliNoteHelper:
             offsets (list[int]): 每个分P的开场偏移
             cover (str): 发送到评论区的字符串
             publish (bool): 是否直接发布
-            confirmed (bool): 发布前是否不用二次确认
+            confirmed (bool): 发布前是否不用二次确认, 默认为False
+            previousPartCollection (list[int]): 前一次发布的视频分P信息, 默认为空
+            ignoreThreshold (int): 时间短于此值的分P将被忽略（秒）, 默认为10分钟
+            danmakuOffsets(list[int]): 弹幕版每个分P的开场偏移
         """
         # 获取视频信息
         video_info_res = await agent.get(
@@ -100,14 +111,12 @@ class BilibiliNoteHelper:
         if not confirmed:
             print('请确认以下信息是否准确（自动监控模式下本提示只会出现一次）')
             print(f'  视频名: {video_info.title}')
-            print('  配置: '+('笔记会自动发布' if publish else '需要手动发布笔记'))
+            print('  配置: '+('笔记会自动发布' if publish else '笔记不会自动发布, 请在脚本执行完毕后进入视频笔记区手动发布'))
             if publish:
                 print(f'  自动发布的评论内容: \n{cover}')
 
-        if len(offsets) != len(video_info.parts):
-            print(f'  注意: 偏移量{offsets}数量和视频分段数量({len(video_info.parts)})不一致！')
-            if (len(offsets) < len(video_info.parts)):
-                offsets = offsets + ['auto'] * (len(video_info.parts)) - len(offsets)
+        if len(offsets) + len(danmakuOffsets) != len(video_info.parts):
+            print(f'  注意: 偏移量{offsets}, {danmakuOffsets} 总数量和视频分段数量({len(video_info.parts)})不一致！')
 
         if not confirmed:
             command = input('请确认以上信息准确。是否执行？[y/n]')
@@ -115,26 +124,67 @@ class BilibiliNoteHelper:
                 return []
 
         current_timestamp = 0
+        current_danmaku_timestamp = 0
+        video_part_index = 0
+        video_part_danmaku_index = 0
+
         submit_obj = []
         submit_len = 0
 
         # 插入每个分P的轴
-        for video_part_index in range(0, len(video_info.parts)):
-            # 遍历每个分P进行计算
-            video_part = video_info.parts[video_part_index]
-            # 10分钟以下的视频会被自动忽略
-            if video_part.duration < 600:
+        for video_part in video_info.parts:
+            # 自动忽略过短的视频（一般是用来垫的视频，不会对应到offsets序列）
+            if video_part.duration < ignoreThreshold:
                 continue
-            raw_offset = offsets[video_part_index]
+
             offset = 0
-            if isinstance(raw_offset, int):
-                offset = raw_offset
-                current_timestamp = offset + video_part.duration
-            elif raw_offset == 'auto':
-                offset = current_timestamp
-                current_timestamp = offset + video_part.duration
+            if not danmakuOffsets:
+                # 所有分P统一由offsets管理
+                if len(offsets) == 0 or video_part_index >= len(offsets):
+                    raw_offset = 'auto'
+                else:
+                    raw_offset = offsets[video_part_index]
+                video_part_index += 1
+                if isinstance(raw_offset, int):
+                    offset = raw_offset
+                    current_timestamp = offset + video_part.duration
+                elif raw_offset == 'auto':
+                    offset = current_timestamp
+                    current_timestamp = offset + video_part.duration
+                else:
+                    continue
             else:
-                continue
+                # 分P分别由offsets和danmakuOffsets决定
+                if '弹幕' in video_part.title and '无弹幕' not in video_part.title:
+                    # 这是一个弹幕视频
+                    if len(danmakuOffsets) == 0 or video_part_danmaku_index >= len(danmakuOffsets):
+                        raw_offset = 'auto'
+                    else:
+                        raw_offset = danmakuOffsets[video_part_danmaku_index]
+                    video_part_danmaku_index += 1
+                    if isinstance(raw_offset, int):
+                        offset = raw_offset
+                        current_danmaku_timestamp = offset + video_part.duration
+                    elif raw_offset == 'auto':
+                        offset = current_danmaku_timestamp
+                        current_danmaku_timestamp = offset + video_part.duration
+                    else:
+                        continue
+                else:
+                    # 这是一个无弹幕视频
+                    if len(offsets) == 0 or video_part_index >= len(offsets):
+                        raw_offset = 'auto'
+                    else:
+                        raw_offset = offsets[video_part_index]
+                    video_part_index += 1
+                    if isinstance(raw_offset, int):
+                        offset = raw_offset
+                        current_timestamp = offset + video_part.duration
+                    elif raw_offset == 'auto':
+                        offset = current_timestamp
+                        current_timestamp = offset + video_part.duration
+                    else:
+                        continue
 
             # 从原始时间轴中切出分p时间轴
             part_timeline = timeline.clip(offset, video_part.duration)
@@ -144,6 +194,10 @@ class BilibiliNoteHelper:
             (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
             submit_obj.extend(timeline_obj)
             submit_len += timeline_len
+
+        if not submit_obj:
+            print('没有可用的笔记内容')
+            return part_collection
 
         submit_obj_str = json.dumps(submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
         data = {
