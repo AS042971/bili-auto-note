@@ -1,4 +1,5 @@
 {
+    "$schema": "../schema/gen_timeline.schema.json",
     "offsets": [-585, 2344],
     "parts": ["./data/p1.txt", "./data/p2.txt"],
     "out": "./data/timeline.csv"

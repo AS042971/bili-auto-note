@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "轴生成配置文件",
+  "description": "调用轴生成程序时提供的配置",
+  "properties": {
+    "offsets": {
+      "description": "参考视频每个分P的开始时刻对应的统一时间轴时刻",
+      "type": "array",
+      "items": {
+        "description": "分P开始时刻",
+        "type": "integer"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "parts": {
+      "description": "每个视频文本轴的路径",
+      "type": "array",
+      "items": {
+        "description": "文本轴路径",
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "out": {
+      "description": "输出 csv 格式时间轴的路径",
+      "type": "string"
+    }
+  },
+  "required": [
+    "offsets",
+    "parts",
+    "out"
+  ]
+}

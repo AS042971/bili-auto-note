@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "轴发布配置文件",
+  "description": "调用轴发布程序时提供的配置",
+  "properties": {
+    "cookie": {
+      "description": "发送笔记用户的cookie",
+      "type": "string"
+    },
+    "bvid": {
+      "description": "目标视频BV号",
+      "type": "string",
+      "maxLength":12,
+      "minLength":12
+    },
+    "timeline": {
+      "description": "时间轴文件路径",
+      "type": "string"
+    },
+    "offsets": {
+      "description": "目标视频每个分P的开始时刻对应的统一时间轴时刻",
+      "type": "array",
+      "items": {
+        "anyOf":[
+          {
+            "description": "分P开始时刻",
+            "type": "integer"
+          },
+          {
+            "description": "根据上一P开始时刻和时长自动推断分P开始时刻",
+            "const": "auto"
+          },
+          {
+            "description": "跳过这个分P",
+            "const": "skip"
+          }
+        ]
+      },
+      "minItems":1
+    },
+    "danmakuOffsets": {
+      "description": "目标视频每个弹幕版分P的开始时刻对应的统一时间轴时刻",
+      "type": "array",
+      "items": {
+        "anyOf":[
+          {
+            "description": "分P开始时刻",
+            "type": "integer"
+          },
+          {
+            "description": "根据上一P开始时刻和时长自动推断分P开始时刻",
+            "const": "auto"
+          },
+          {
+            "description": "跳过这个分P",
+            "const": "skip"
+          }
+        ]
+      }
+    },
+    "ignoreThreshold": {
+      "description": "时长短于此值的分P将被忽略，单位为秒",
+      "type": "integer",
+      "default": 600,
+      "minimum": 0
+    },
+    "cover": {
+      "description": "视频转制通过时发送至评论区的文案",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "publish": {
+      "description": "是否自动发布",
+      "type": "boolean"
+    },
+    "watch": {
+      "description": "是否监控视频和笔记更新",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "cookie",
+    "bvid",
+    "timeline",
+    "offsets",
+    "cover",
+    "publish"
+  ]
+}
