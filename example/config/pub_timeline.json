@@ -4,5 +4,6 @@
     "timeline": "./data/timeline.csv",
     "offsets": [-52, "auto", -52, "auto"],
     "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-    "publish": true
+    "publish": true,
+    "watch": false
 }

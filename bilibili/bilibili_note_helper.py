@@ -2,6 +2,7 @@ import os
 import time
 import json
 import csv
+import asyncio
 from urllib.parse import urlencode
 
 from typing import Tuple, List
@@ -47,7 +48,7 @@ class BilibiliNoteHelper:
         return VideoInfo(aid, pic, title, parts)
 
     @staticmethod
-    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool, confirmed: bool = False) -> None:
+    async def sendNote(timeline: Timeline, agent: BilibiliAgent, bvid: str, offsets: List[int], cover: str, publish: bool, confirmed: bool = False, previousPartCollection: List[str] = []) -> List[str]:
         """发送笔记
 
         Args:
@@ -66,7 +67,12 @@ class BilibiliNoteHelper:
                 "bvid": bvid
             })
         video_info = BilibiliNoteHelper.getVideoInfo(video_info_res)
+        part_collection = [part.cid for part in video_info.parts]
+        if previousPartCollection == part_collection:
+            # 分P数量没有发生变化
+            return part_collection
 
+        await asyncio.sleep(1)
         # 获取笔记状态
         note_res = await agent.get(
             "https://api.bilibili.com/x/note/list/archive",
@@ -75,6 +81,7 @@ class BilibiliNoteHelper:
             })
         note_id = ''
         if not note_res['noteIds']:
+            await asyncio.sleep(1)
             # 没有笔记，插入一个新的空笔记以获取ID
             note_add_res = await agent.post(
                 "https://api.bilibili.com/x/note/add",
@@ -91,7 +98,7 @@ class BilibiliNoteHelper:
         # 发布笔记
         # 检查偏移量和分P数是否一致
         if not confirmed:
-            print('请确认以下信息是否准确')
+            print('请确认以下信息是否准确（自动监控模式下本提示只会出现一次）')
             print(f'  视频名: {video_info.title}')
             print('  配置: '+('笔记会自动发布' if publish else '需要手动发布笔记'))
             if publish:
@@ -105,7 +112,7 @@ class BilibiliNoteHelper:
         if not confirmed:
             command = input('请确认以上信息准确。是否执行？[y/n]')
             if command != 'Y' and command != 'y':
-                return
+                return []
 
         current_timestamp = 0
         submit_obj = []
@@ -115,6 +122,9 @@ class BilibiliNoteHelper:
         for video_part_index in range(0, len(video_info.parts)):
             # 遍历每个分P进行计算
             video_part = video_info.parts[video_part_index]
+            # 10分钟以下的视频会被自动忽略
+            if video_part.duration < 600:
+                continue
             raw_offset = offsets[video_part_index]
             offset = 0
             if isinstance(raw_offset, int):
@@ -148,8 +158,11 @@ class BilibiliNoteHelper:
             "publish": 1 if publish else 0,
             "auto_comment": 1 if publish else 0
         }
+        await asyncio.sleep(1)
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)
         if submit_res['note_id']:
             print(f'执行成功，笔记ID为：{submit_res["note_id"]}')
+            return part_collection
         else:
             print(f'执行失败，返回值为{submit_res}')
+            return []
