@@ -55,7 +55,8 @@ class BilibiliNoteHelper:
             confirmed: bool = False,
             previousPartCollection: List[str] = [],
             ignoreThreshold: int = 600,
-            danmakuOffsets: List[int] = []
+            danmakuOffsets: List[int] = [],
+            autoComment: bool = True
         ) -> List[str]:
         """发送笔记
 
@@ -210,7 +211,7 @@ class BilibiliNoteHelper:
             "cont_len": submit_len,
             "hash": str(round(time.time()*1000)),
             "publish": 1 if publish else 0,
-            "auto_comment": 1 if publish else 0
+            "auto_comment": 1 if (publish and autoComment) else 0
         }
         await asyncio.sleep(1)
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)

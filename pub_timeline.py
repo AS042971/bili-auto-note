@@ -64,26 +64,22 @@ async def main(config_path: str):
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection=published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts
                         else:
                             print('视频列表和轴文件均无变化')
                     failed_cnt = 0
-                    # 等待2分钟
-                    for _ in range(24):
-                        await asyncio.sleep(5)
-                        print('*', end='', flush=True)
-                    print('')
-                except:
+                except Exception as e:
                     failed_cnt += 1
-                    print(f'当前共计失败 {failed_cnt} 次')
+                    print(f'当前共计连续失败 {failed_cnt} 次，错误原因如下：')
+                    print(e)
+                finally:
                     # 等待2分钟
                     for _ in range(24):
                         await asyncio.sleep(5)
                         print('*', end='', flush=True)
-
             if failed_cnt > 5:
                 print('程序因出错退出，请检查日志输出')
             else:
