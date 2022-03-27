@@ -6,6 +6,7 @@
     "offsets": [-52, "auto"],
     "danmakuOffsets": [-52, "auto"],
     "ignoreThreshold": 600,
+    "output": "./data/output.txt",
     "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
     "publish": true,
     "watch": false

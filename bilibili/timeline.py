@@ -49,7 +49,10 @@ class TimelineItem:
     def __str__(self) -> str:
         m, s = divmod(self.sec, 60)
         h, m = divmod(m, 60)
-        time = "%d:%02d:%02d" % (h, m, s)
+        if h == 0:
+            time = "%02d:%02d" % (m, s)
+        else:
+            time = "%d:%02d:%02d" % (h, m, s)
         return time + ' ' + self.tag
 
 class Timeline:

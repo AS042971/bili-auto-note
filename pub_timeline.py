@@ -37,9 +37,15 @@ async def main(config_path: str):
             print(f'可更新配置文件 {config_path} 增加"watch"字段，用于自动监控视频分P和笔记文件的变化，可参考example目录中的示例')
             watch = False
 
+        # 读取文本轴存储
+        if 'output' in json_data:
+            output = json_data['output']
+        else:
+            output = ''
+
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
+            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -60,11 +66,11 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记，需要进行确认
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts

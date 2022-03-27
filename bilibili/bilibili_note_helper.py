@@ -56,7 +56,8 @@ class BilibiliNoteHelper:
             previousPartCollection: List[str] = [],
             ignoreThreshold: int = 600,
             danmakuOffsets: List[int] = [],
-            autoComment: bool = True
+            autoComment: bool = True,
+            output: str = ''
         ) -> List[str]:
         """发送笔记
 
@@ -71,6 +72,10 @@ class BilibiliNoteHelper:
             previousPartCollection (list[int]): 前一次发布的视频分P信息, 默认为空
             ignoreThreshold (int): 时间短于此值的分P将被忽略（秒）, 默认为10分钟
             danmakuOffsets(list[int]): 弹幕版每个分P的开场偏移
+            output(str): 输出文本轴路径
+
+        Returns:
+            List[str]: 如果发布成功，返回新的视频分P信息
         """
         # 获取视频信息
         video_info_res = await agent.get(
@@ -115,6 +120,8 @@ class BilibiliNoteHelper:
             print('  配置: '+('笔记会自动发布' if publish else '笔记不会自动发布, 请在脚本执行完毕后进入视频笔记区手动发布'))
             if publish:
                 print(f'  自动发布的评论内容: \n{cover}')
+            if output:
+                print(f'  更新笔记时文本轴将同步保存于 {output}')
 
         if len(offsets) + len(danmakuOffsets) != len(video_info.parts):
             print(f'  注意: 偏移量{offsets}, {danmakuOffsets} 总数量和视频分段数量({len(video_info.parts)})不一致！')
@@ -131,6 +138,8 @@ class BilibiliNoteHelper:
 
         submit_obj = []
         submit_len = 0
+
+        txt_timeline = ''
 
         # 插入每个分P的轴
         for video_part in video_info.parts:
@@ -192,6 +201,11 @@ class BilibiliNoteHelper:
             if len(part_timeline.items) == 0:
                 continue
 
+            txt_timeline += (video_part.title)
+            txt_timeline += '\n'
+            txt_timeline += str(part_timeline)
+            txt_timeline += '\n\n'
+
             (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
             submit_obj.extend(timeline_obj)
             submit_len += timeline_len
@@ -199,6 +213,15 @@ class BilibiliNoteHelper:
         if not submit_obj:
             print('没有可用的笔记内容')
             return part_collection
+
+        if output:
+            # 将文本轴存储在文件中
+            try:
+                with open(output, "w", encoding="utf-8") as f:
+                    f.write(txt_timeline)
+            except Exception as e:
+                print('文本轴写入失败，错误原因：')
+                print(e)
 
         submit_obj_str = json.dumps(submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
         data = {
