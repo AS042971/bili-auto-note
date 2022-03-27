@@ -103,8 +103,11 @@
 
 ## 小工具：监控评论区
 
-执行 `python comment_monitor.py <目标视频BVID> <监测用户名>`即可在被监测用户发评论时收到通知
-
+执行 `python comment_monitor.py <目标视频BVID> <监测用户名> <pushplus_token>`即可在被监测用户发评论时收到通知
+* 特别提示
+  1. pushplus_token不是必须参数,选填该参数可以激活微信推送
+  2. pushplus_token从 [此处](https://www.pushplus.plus)申请并绑定微信
+  3. 接口限制：1分钟内接收5次请求，1小时3次重复信息，1天200条推送
+    
 ## 后续更新计划
 
-* 评论区监控成功时发送提醒
