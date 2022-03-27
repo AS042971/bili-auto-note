@@ -155,10 +155,25 @@ class TimelineConverter:
                 for item in timeline:
                     # 保存为秒
                     f.write(f"{item.sec},{item.tag},{int(item.highlight)}\n")
-                    # f.write(f"{item.sec},{item.tag},{int(item.highlight),{item.type},{' '.join(item.members)}\n")
-                    # 保存为\d+?:?\d+:\d+的格式
-                    # f.write(f"{item.__str__().split(' ')[0]},{item.tag},{int(item.highlight)\n")
-                    # f.write(f"{item.__str__().split(' ')[0]},{item.tag},{int(item.highlight),{item.type},{item.members}\n")
+        except Exception as e:
+            print(e)
+            return False
+        return True
+
+    @staticmethod
+    def saveTimelineToPBF(path: str, timeline: Timeline) -> bool:
+        """
+        时间轴Timeline数据保存为pbf文件
+        :param path: pbf保存路径
+        :param items: Timeline
+        :return: bool
+        """
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("[Bookmark]\n")
+                for idx, item in enumerate(timeline):
+                    # 保存为毫秒
+                    f.write(f"{idx}={item.sec * 1000}*{item.tag}*\n")
         except Exception as e:
             print(e)
             return False

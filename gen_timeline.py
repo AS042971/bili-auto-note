@@ -35,10 +35,16 @@ def main(config_path: str):
     if len(parts) >= 2:
         for i in range(len(parts))[1:]:
             time_line += TimelineConverter.loadTimelineFromText(parts[i]).shift(offsets[i])
-    if TimelineConverter.saveTimelineToCSV(out, time_line):
-        print("Done!")
+    if out.endswith('.pbf'):
+        if TimelineConverter.saveTimelineToPBF(out, time_line):
+            print("Done!")
+        else:
+            print(f"Save to {out} failed")
     else:
-        print("Save to .csv failed")
+        if TimelineConverter.saveTimelineToCSV(out, time_line):
+            print("Done!")
+        else:
+            print(f"Save to {out} failed")
 
 if __name__ == '__main__':
     # add default config filepath
