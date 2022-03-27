@@ -16,6 +16,7 @@
 ### 配置文件示例 (json文件)
 
     {
+        "$schema": "../schema/gen_timeline.schema.json",
         "offsets": [-585, 2344],
         "parts": ["./data/p1.txt", "./data/p2.txt"],
         "out": "./data/timeline.csv"
@@ -73,6 +74,7 @@
 ### 配置文件示例 (json文件)
 
     {
+        "$schema": "../schema/pub_timeline.schema.json",
         "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
         "bvid": "BV15U4y1d7TX",
         "timeline": "./data/timeline.csv",
@@ -103,5 +105,5 @@
 
 ## 后续更新计划
 
-* 实现自动监测，当视频分p数量发生变化，或本地 csv 文件变化时自动上传笔记
 * 实现时间轴转换为 Potplayer 书签功能
+* 评论区监控成功时发送提醒

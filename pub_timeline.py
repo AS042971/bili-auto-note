@@ -45,10 +45,10 @@ async def main(config_path: str):
             failed_cnt = 0
             wait_cnt = 0
             published_parts = []
-            modify_time = 0
+            modify_time = os.path.getmtime(json_data['timeline'])
             first_time = True
-            # 退出循环条件：失败5次/分P数量和标记数量一致且时间轴2小时内均未更新
-            while failed_cnt <= 5 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
+            # 退出循环条件：连续失败15次（30分钟）或分P数量和标记数量一致且时间轴2小时内均未更新
+            while failed_cnt <= 15 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
                 try:
                     wait_cnt += 1
                     print(f'正在开始第 {wait_cnt} 次任务 ...')
@@ -80,8 +80,8 @@ async def main(config_path: str):
                     for _ in range(24):
                         await asyncio.sleep(5)
                         print('*', end='', flush=True)
-            if failed_cnt > 5:
-                print('程序因出错退出，请检查日志输出')
+            if failed_cnt > 15:
+                print('程序因在30分钟内连续多次失败退出，请检查日志输出')
             else:
                 print('视频分P数量已达到要求，且轴文件已长时间未更新，程序自动退出')
         await agent.close()
