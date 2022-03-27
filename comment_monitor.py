@@ -54,6 +54,7 @@ async def main(bvid: str, uname: str):
             if reply['replies']:
                 for sub_reply in reply['replies']:
                     sub_reply_uname = sub_reply['member']['uname']
+                    pub_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sub_reply["ctime"]))
                     if sub_reply_uname == uname and sub_reply['rpid'] not in shown_ids:
                         print('------------------------------')
                         print(f'已捕获到 {uname} 的楼中楼回复：')
