@@ -30,7 +30,7 @@ class TimelineItem:
             members (list[Member], optional): 特殊条目参与的成员 Defaults to [].
         """
         self.sec = sec
-        self.tag = tag
+        self.tag = tag.strip()
         self.highlight = highlight
         self.type = type
         self.members = members
