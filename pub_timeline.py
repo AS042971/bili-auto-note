@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from bilibili import BilibiliAgent, Timeline, TimelineItem, BilibiliNoteHelper, TimelineConverter
+from bilibili import BilibiliAgent, BilibiliNoteHelper, TimelineConverter
 import asyncio
 import sys
 import json
@@ -53,8 +53,8 @@ async def main(config_path: str):
             published_parts = []
             modify_time = os.path.getmtime(json_data['timeline'])
             first_time = True
-            # 退出循环条件：连续失败15次（30分钟）或分P数量和标记数量一致且时间轴2小时内均未更新
-            while failed_cnt <= 15 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
+            # 退出循环条件：连续失败30次（120分钟）或分P数量和标记数量一致且时间轴2小时内均未更新
+            while failed_cnt <= 30 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
                 try:
                     wait_cnt += 1
                     print(f'正在开始第 {wait_cnt} 次任务 ...')
@@ -81,13 +81,19 @@ async def main(config_path: str):
                     failed_cnt += 1
                     print(f'当前共计连续失败 {failed_cnt} 次，错误原因如下：')
                     print(e)
+                    # 额外等待2分钟
+                    for _ in range(24):
+                        await asyncio.sleep(5)
+                        print('*', end='', flush=True)
+                    print('')
                 finally:
                     # 等待2分钟
                     for _ in range(24):
                         await asyncio.sleep(5)
                         print('*', end='', flush=True)
-            if failed_cnt > 15:
-                print('程序因在30分钟内连续多次失败退出，请检查日志输出')
+                    print(' ', end='', flush=True)
+            if failed_cnt > 30:
+                print('程序因在120分钟内连续多次失败退出，请检查日志输出')
             else:
                 print('视频分P数量已达到要求，且轴文件已长时间未更新，程序自动退出')
         await agent.close()
