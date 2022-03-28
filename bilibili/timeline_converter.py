@@ -120,7 +120,7 @@ class TimelineConverter:
         items = []
         for li in lines:
             try:
-                li_re = re.findall("(.+?\d+:\d+) ?(.+)", li.strip())[0]
+                li_re = re.findall("(.+?\d+:\d+) (.+)", li.strip())[0]
                 time = li_re[0].split(":")
                 x = 1
                 sec = 0
