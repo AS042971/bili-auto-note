@@ -25,8 +25,20 @@
       "uniqueItems": true
     },
     "out": {
-      "description": "输出 csv 格式时间轴的路径",
-      "type": "string"
+      "description": "输出时间轴的路径",
+      "anyOf":[
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      ]
     }
   },
   "required": [

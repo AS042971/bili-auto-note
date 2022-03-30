@@ -22,10 +22,9 @@ def check_file(files: list):
 def main(config_path: str):
     with open(config_path, 'r', encoding='utf8') as fp:
         json_data = json.load(fp)
-        print(json_data)
         offsets = json_data['offsets']
         parts = json_data['parts']
-        out = json_data['out']
+        raw_out = json_data['out']
     if check_file(parts) is not None:
         sys.exit(-1)
     if len(parts) != len(offsets):
@@ -35,16 +34,27 @@ def main(config_path: str):
     if len(parts) >= 2:
         for i in range(len(parts))[1:]:
             time_line += TimelineConverter.loadTimelineFromText(parts[i]).shift(offsets[i])
-    if out.endswith('.pbf'):
-        if TimelineConverter.saveTimelineToPBF(out, time_line):
-            print("Done!")
-        else:
-            print(f"Save to {out} failed")
+    if isinstance(raw_out ,str):
+        outs = [raw_out]
     else:
-        if TimelineConverter.saveTimelineToCSV(out, time_line):
-            print("Done!")
+        outs = raw_out
+
+    for out in outs:
+        if out.endswith('.pbf'):
+            if TimelineConverter.saveTimelineToPBF(out, time_line):
+                print("Done!")
+            else:
+                print(f"Save to {out} failed")
+        elif out.endswith('.csv'):
+            if TimelineConverter.saveTimelineToCSV(out, time_line):
+                print("Done!")
+            else:
+                print(f"Save to {out} failed")
         else:
-            print(f"Save to {out} failed")
+            if TimelineConverter.saveTimelineToText(out, time_line):
+                print("Done!")
+            else:
+                print(f"Save to {out} failed")
 
 if __name__ == '__main__':
     # add default config filepath

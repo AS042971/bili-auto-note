@@ -178,3 +178,20 @@ class TimelineConverter:
             print(e)
             return False
         return True
+
+    @staticmethod
+    def saveTimelineToText(path: str, timeline: Timeline) -> bool:
+        """
+        时间轴Timeline数据保存为txt文件
+        :param path: txt保存路径
+        :param items: Timeline
+        :return: bool
+        """
+        try:
+            # "utf-8-sig"的原因：能在excel中正确显示
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(str(timeline) + '\n')
+        except Exception as e:
+            print(e)
+            return False
+        return True
