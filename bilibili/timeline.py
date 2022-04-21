@@ -1,7 +1,6 @@
 from enum import Enum, unique
 from typing import Iterator, List
 
-
 @unique
 class TimelineType(Enum):
     NORMAL = ''
@@ -96,3 +95,23 @@ class Timeline:
 
     def __str__(self) -> str:
         return '\n'.join(map(str, self.items))
+
+    def songAndDance(self) -> 'Timeline':
+        """生成仅含歌舞的时间轴（🎶开头的条目）
+
+        Returns:
+            Timeline: 仅含歌舞的时间轴
+        """
+        sd_items = list(filter(lambda item: item.type == TimelineType.SONG or item.type == TimelineType.DANCE or item.tag.startswith('🎶'), self.items))
+        return Timeline(sd_items)
+
+    def hasTitle(self) -> bool:
+        """判断轴中是否包含章节标题（##开头的条目）
+
+        Returns:
+            bool: 是否包含章节标题
+        """
+        for item in self.items:
+            if item.tag.startswith('##'):
+                return True
+        return False

@@ -57,7 +57,9 @@ class BilibiliNoteHelper:
             ignoreThreshold: int = 600,
             danmakuOffsets: List[int] = [],
             autoComment: bool = True,
-            output: str = ''
+            output: str = '',
+            songAndDance = True,
+            preface = ''
         ) -> List[str]:
         """发送笔记
 
@@ -139,7 +141,17 @@ class BilibiliNoteHelper:
         submit_obj = []
         submit_len = 0
 
+        song_dance_obj = []
+        song_dance_len = 0
+
         txt_timeline = ''
+
+        has_title = timeline.hasTitle()
+
+        if songAndDance:
+            (song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航')
+            song_dance_obj.extend(song_dance_title_obj)
+            song_dance_len += song_dance_title_len
 
         # 插入每个分P的轴
         for video_part in video_info.parts:
@@ -206,13 +218,42 @@ class BilibiliNoteHelper:
             txt_timeline += str(part_timeline)
             txt_timeline += '\n\n'
 
+            if not has_title:
+                (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title)
+                submit_obj.extend(title_obj)
+                submit_len += title_len
+
             (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
             submit_obj.extend(timeline_obj)
             submit_len += timeline_len
 
+            if songAndDance:
+                song_dance_timeline = part_timeline.songAndDance()
+                if len(song_dance_timeline.items) != 0:
+                    (song_dance_timeline_obj, song_dance_timeline_len) = TimelineConverter.getTimelineJson(song_dance_timeline, video_part)
+                    song_dance_obj.extend(song_dance_timeline_obj)
+                    song_dance_len += song_dance_timeline_len
+
         if not submit_obj:
             print('没有可用的笔记内容')
             return part_collection
+
+        final_submit_obj = []
+        final_submit_len = 0
+
+        if preface:
+            final_submit_obj.append({
+                "insert": preface
+            })
+            final_submit_obj.append({ "insert": "\n" })
+            final_submit_len += len(preface) + 1
+
+        if songAndDance and song_dance_obj:
+            final_submit_obj.extend(song_dance_obj)
+            final_submit_len += song_dance_len
+
+        final_submit_obj.extend(submit_obj)
+        final_submit_len += submit_len
 
         if output:
             # 将文本轴存储在文件中
@@ -223,7 +264,7 @@ class BilibiliNoteHelper:
                 print('文本轴写入失败，错误原因：')
                 print(e)
 
-        submit_obj_str = json.dumps(submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
+        submit_obj_str = json.dumps(final_submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
         data = {
             "oid": video_info.aid,
             "note_id": note_id,
@@ -231,7 +272,7 @@ class BilibiliNoteHelper:
             "summary": cover,
             "content": submit_obj_str,
             "csrf": agent.csrf,
-            "cont_len": submit_len,
+            "cont_len": final_submit_len,
             "hash": str(round(time.time()*1000)),
             "publish": 1 if publish else 0,
             "auto_comment": 1 if (publish and autoComment) else 0

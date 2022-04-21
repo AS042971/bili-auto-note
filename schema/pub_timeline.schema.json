@@ -36,8 +36,7 @@
             "const": "skip"
           }
         ]
-      },
-      "minItems":1
+      }
     },
     "danmakuOffsets": {
       "description": "目标视频每个弹幕版分P的开始时刻对应的统一时间轴时刻",
@@ -73,7 +72,16 @@
       "description": "视频转制通过时发送至评论区的文案",
       "type": "string",
       "minLength": 1,
-      "maxLength": 256
+      "maxLength": 85
+    },
+    "preface": {
+      "description": "笔记轴开头的文本",
+      "type": "string",
+      "maxLength": 1024
+    },
+    "songAndDanceAbstract": {
+      "description": "是否生成歌舞摘要",
+      "type": "boolean"
     },
     "publish": {
       "description": "是否自动发布",

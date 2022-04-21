@@ -8,6 +8,8 @@
     "ignoreThreshold": 600,
     "output": "./data/output.txt",
     "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-    "publish": true,
+    "preface": "【注意】今天也要开开心心地看录播",
+    "songAndDanceAbstract": true,
+    "publish": false,
     "watch": false
 }

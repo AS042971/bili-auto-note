@@ -84,6 +84,8 @@
         "ignoreThreshold": 600,
         "output": "./data/output.txt",
         "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
+        "preface": "【注意】今天也要开开心心地看录播",
+        "songAndDanceAbstract": true,
         "publish": true,
         "watch": false
     }
@@ -100,6 +102,8 @@
 * `ignoreThreshold`: 时间短于此值的分P将被忽略，单位为秒，默认为600（即10分钟）。此参数用于处理占位视频。被忽略的视频不会参与到 `offsets` 和 `danmakuOffsets` 的推断中
 * `output`: 文本轴输出路径
 * `cover`: 视频转制通过时发送至评论区的文案
+* `preface`: 笔记开头的文案
+* `songAndDanceAbstract`: 在笔记开头添加歌舞快速导航
 * `publish`: 是否自动发布
 * `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出
 
@@ -110,6 +114,5 @@
   1. pushplus_token不是必须参数,选填该参数可以激活微信推送
   2. pushplus_token从 [此处](https://www.pushplus.plus)申请并绑定微信
   3. 接口限制：1分钟内接收5次请求，1小时3次重复信息，1天200条推送
-    
-## 后续更新计划
 
+## 后续更新计划
