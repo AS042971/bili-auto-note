@@ -183,8 +183,7 @@ class TimelineConverter:
             with open(path, "w", encoding="utf-8-sig") as f:
                 for item in timeline:
                     # 保存为秒
-                    if not item.tag.startswith('##'):
-                        f.write(f"{item.sec},{item.tag},{int(item.highlight)}\n")
+                    f.write(f"{item.sec},{item.tag},{int(item.highlight)}\n")
         except Exception as e:
             print(e)
             return False
@@ -203,8 +202,7 @@ class TimelineConverter:
                 f.write("[Bookmark]\n")
                 for idx, item in enumerate(timeline):
                     # 保存为毫秒
-                    if not item.tag.startswith('##'):
-                        f.write(f"{idx}={item.sec * 1000}*{item.tag}*\n")
+                    f.write(f"{idx}={item.sec * 1000}*{item.tag}*\n")
         except Exception as e:
             print(e)
             return False
