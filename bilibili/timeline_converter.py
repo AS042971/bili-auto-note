@@ -38,34 +38,34 @@ class TimelineConverter:
         Returns:
                 list: 对应的json对象
         """
-        obj = []
-        # 时间胶囊
-        obj.append({
-            "insert": {
-                "tag": {
-                    "cid": info.cid,
-                    "oid_type": 1,
-                    "status": 0,
-                    "index": info.index,
-                    "seconds": item.sec,
-                    "cidCount": info.cidCount,
-                    "key": str(round(time.time()*1000)),
-                    "title": "P" + str(info.index),
-                    "epid": 0
-                }
-            }
-        })
-        obj.append({ "insert": "\n" })
-        # 轴引导线
-        obj.append({
-            "attributes": { "color": "#cccccc" },
-            "insert": "  └─ "
-        })
         # 轴内容
         tagContent = item.tag
         if tagContent.startswith('##'):
             return TimelineConverter.getTitleJson(tagContent[2:])
         else:
+            obj = []
+            # 时间胶囊
+            obj.append({
+                "insert": {
+                    "tag": {
+                        "cid": info.cid,
+                        "oid_type": 1,
+                        "status": 0,
+                        "index": info.index,
+                        "seconds": item.sec,
+                        "cidCount": info.cidCount,
+                        "key": str(round(time.time()*1000)),
+                        "title": "P" + str(info.index),
+                        "epid": 0
+                    }
+                }
+            })
+            obj.append({ "insert": "\n" })
+            # 轴引导线
+            obj.append({
+                "attributes": { "color": "#cccccc" },
+                "insert": "  └─ "
+            })
             if tagContent.startswith('🎶'):
                 # 去除歌舞标识
                 tagContent = tagContent[1:]
@@ -104,6 +104,23 @@ class TimelineConverter:
             content_len += item_len
         content_len += 1
         return (obj, content_len)
+
+    @staticmethod
+    def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo) -> List[List]:
+        """生成分条目的时间戳
+
+        Args:
+            timeline (Timeline): 时间轴
+            info (VideoPartInfo): 视频信息
+
+        Returns:
+            List[List[str, list, int]]: _description_
+        """
+        results = []
+        for item in timeline.items:
+            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info)
+            results.append([item.tag, item_obj, item_len])
+        return results
 
     @staticmethod
     def loadTimelineFromCSV(path: str) -> Timeline:

@@ -143,6 +143,7 @@ class BilibiliNoteHelper:
 
         song_dance_obj = []
         song_dance_len = 0
+        song_dance_collection = []
 
         txt_timeline = ''
 
@@ -230,9 +231,20 @@ class BilibiliNoteHelper:
             if songAndDance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
-                    (song_dance_timeline_obj, song_dance_timeline_len) = TimelineConverter.getTimelineJson(song_dance_timeline, video_part)
-                    song_dance_obj.extend(song_dance_timeline_obj)
-                    song_dance_len += song_dance_timeline_len
+                    part_result = TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part)
+                    if not song_dance_collection:
+                        song_dance_collection = part_result
+                    else:
+                        for item in part_result:
+                            found = False
+                            for ref in song_dance_collection:
+                                if item[0] == ref[0]:
+                                    ref[1].insert(len(item[1])-3, item[1][0])
+                                    ref[2] += 1
+                                    found = True
+                                    break
+                            if not found:
+                                song_dance_collection.append(item)
 
         if not submit_obj:
             print('没有可用的笔记内容')
@@ -248,7 +260,10 @@ class BilibiliNoteHelper:
             final_submit_obj.append({ "insert": "\n" })
             final_submit_len += len(preface) + 1
 
-        if songAndDance and song_dance_obj:
+        if songAndDance and song_dance_collection:
+            for item in song_dance_collection:
+                song_dance_obj.extend(item[1])
+                song_dance_len += item[2]
             final_submit_obj.extend(song_dance_obj)
             final_submit_len += song_dance_len
 

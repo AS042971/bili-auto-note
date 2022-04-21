@@ -70,6 +70,9 @@ class Timeline:
     def __add__(self, other: 'Timeline') -> 'Timeline':
         return Timeline(self.items + other.items)
 
+    def __str__(self) -> str:
+        return '\n'.join(map(str, self.items))
+
     def shift(self, delta: int) -> 'Timeline':
         """生成调整后的时间轴
 
@@ -92,9 +95,6 @@ class Timeline:
             Timeline: 适配于切片的时间轴（0表示切片开始时刻）
         """
         return Timeline([item.shift(-start) for item in self.items if item.sec >= start and item.sec <= start + length])
-
-    def __str__(self) -> str:
-        return '\n'.join(map(str, self.items))
 
     def songAndDance(self) -> 'Timeline':
         """生成仅含歌舞的时间轴（🎶开头的条目）
