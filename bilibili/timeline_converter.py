@@ -7,13 +7,13 @@ from .video import VideoPartInfo
 
 class TimelineConverter:
     @staticmethod
-    def getTitleJson(title: str) -> Tuple[list, int]:
+    def getTitleJson(title: str, background="#fff359") -> Tuple[list, int]:
         obj = []
         obj.append({ "insert": "\n" })
         obj.append({
             "attributes": {
                 "size": "18px",
-                "background": "#fff359",
+                "background": background,
                 "bold": True,
                 "align": "center"
             },
@@ -41,7 +41,8 @@ class TimelineConverter:
         # 轴内容
         tagContent = item.tag
         if tagContent.startswith('##'):
-            return TimelineConverter.getTitleJson(tagContent[2:])
+            background = "#73fdea" if '弹幕' in info.title and '无弹幕' not in info.title else "#fff359"
+            return TimelineConverter.getTitleJson(tagContent[2:], background=background)
         else:
             obj = []
             # 时间胶囊

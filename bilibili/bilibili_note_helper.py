@@ -150,7 +150,7 @@ class BilibiliNoteHelper:
         has_title = timeline.hasTitle()
 
         if songAndDance:
-            (song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航')
+            (song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
 
@@ -219,8 +219,10 @@ class BilibiliNoteHelper:
             txt_timeline += str(part_timeline)
             txt_timeline += '\n\n'
 
+            background = "#73fdea" if '弹幕' in video_part.title and '无弹幕' not in video_part.title else "#fff359"
+
             if not has_title:
-                (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title)
+                (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
                 submit_obj.extend(title_obj)
                 submit_len += title_len
 
