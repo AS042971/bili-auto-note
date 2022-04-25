@@ -221,10 +221,9 @@ class BilibiliNoteHelper:
 
             background = "#73fdea" if '弹幕' in video_part.title and '无弹幕' not in video_part.title else "#fff359"
 
-            if not has_title:
-                (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
-                submit_obj.extend(title_obj)
-                submit_len += title_len
+            (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
+            submit_obj.extend(title_obj)
+            submit_len += title_len
 
             (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
             submit_obj.extend(timeline_obj)
