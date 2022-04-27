@@ -97,12 +97,12 @@ class Timeline:
         return Timeline([item.shift(-start) for item in self.items if item.sec >= start and item.sec <= start + length])
 
     def songAndDance(self) -> 'Timeline':
-        """生成仅含歌舞的时间轴（🎶开头的条目）
+        """生成仅含歌舞的时间轴（🎤/💃开头的条目）
 
         Returns:
             Timeline: 仅含歌舞的时间轴
         """
-        sd_items = list(filter(lambda item: item.type == TimelineType.SONG or item.type == TimelineType.DANCE or item.tag.startswith('🎶'), self.items))
+        sd_items = list(filter(lambda item: item.type == TimelineType.SONG or item.type == TimelineType.DANCE or item.tag.startswith('🎤') or item.tag.startswith('💃'), self.items))
         return Timeline(sd_items)
 
     def hasTitle(self) -> bool:

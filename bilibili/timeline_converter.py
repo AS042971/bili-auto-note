@@ -80,21 +80,42 @@ class TimelineConverter:
                 "attributes": { "color": "#cccccc" },
                 "insert": "  └─ "
             })
-            if tagContent.startswith('🎶'):
-                # 去除歌舞标识
-                tagContent = tagContent[1:]
             if item.highlight:
-                obj.append({
-                    "attributes": {
-                        "color": "#ee230d",
-                        "bold": True
-                    },
-                    "insert": tagContent
-                })
+                if tagContent.endswith('*'):
+                    tagContent = tagContent[:-2]
+                    obj.append({
+                        "attributes": {
+                            "color": "#ee230d",
+                            "bold": True
+                        },
+                        "insert": tagContent
+                    })
+                else:
+                    obj.append({
+                        "attributes": {
+                            "color": "#ee230d"
+                        },
+                        "insert": tagContent
+                    })
             else:
-                obj.append({
-                    "insert": tagContent
-                })
+                if tagContent.startswith('🎤'):
+                    obj.append({
+                        "attributes": {
+                            "color": "#0b84ed"
+                        },
+                        "insert": tagContent
+                    })
+                elif tagContent.startswith('💃'):
+                    obj.append({
+                        "attributes": {
+                            "color": "#1DB100"
+                        },
+                        "insert": tagContent
+                    })
+                else:
+                    obj.append({
+                        "insert": tagContent
+                    })
             obj.append({ "insert": "\n" })
             return (obj, len(tagContent) + 8)
 
