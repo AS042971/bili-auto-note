@@ -82,7 +82,7 @@ class TimelineConverter:
             })
             if item.highlight:
                 if tagContent.endswith('*'):
-                    tagContent = tagContent[:-2]
+                    tagContent = tagContent[:-1]
                     obj.append({
                         "attributes": {
                             "color": "#ee230d",
