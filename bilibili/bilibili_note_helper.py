@@ -3,6 +3,7 @@ import time
 import json
 import csv
 import asyncio
+import random
 from urllib.parse import urlencode
 
 from typing import Tuple, List
@@ -382,6 +383,37 @@ class BilibiliNoteHelper:
                 print('文本轴写入失败，错误原因：')
                 print(e)
 
+        if not main_obj:
+            # 插入羊驼滑跪图
+            final_submit_obj.append({
+                "insert": {
+                    "imageUpload": {
+                    "url": "//api.bilibili.com/x/note/image?image_id=124497",
+                    "status": "done",
+                    "width": 315,
+                    "id": "IMAGE_" + str(round(time.time()*1000))
+                    }
+                }
+            })
+            final_submit_obj.append({ "insert": "\n" })
+
+        # 补全字数
+        if final_submit_len < 300:
+            sample = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+            ran_str_list = []
+            for i in range(300 - final_submit_len):
+                char = random.choice(sample)
+                ran_str_list.append(char)
+            ran_str = ''.join(ran_str_list)
+
+            for _ in range(10):
+                final_submit_obj.append({ "insert": "\n" })
+            final_submit_obj.append({
+                "attributes": { "color": "#ffffff" },
+                "insert": ran_str
+            })
+            final_submit_len = 311
+
         submit_obj_str = json.dumps(final_submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
         data = {
             "oid": video_info.aid,
@@ -390,7 +422,7 @@ class BilibiliNoteHelper:
             "summary": cover,
             "content": submit_obj_str,
             "csrf": agent.csrf,
-            "cont_len": max(final_submit_len, 201),
+            "cont_len": max(final_submit_len, 301),
             "hash": str(round(time.time()*1000)),
             "publish": 1 if publish else 0,
             "auto_comment": 1 if (publish and autoComment) else 0
