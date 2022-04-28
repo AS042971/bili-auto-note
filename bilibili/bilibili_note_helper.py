@@ -390,7 +390,7 @@ class BilibiliNoteHelper:
             "summary": cover,
             "content": submit_obj_str,
             "csrf": agent.csrf,
-            "cont_len": final_submit_len,
+            "cont_len": max(final_submit_len, 201),
             "hash": str(round(time.time()*1000)),
             "publish": 1 if publish else 0,
             "auto_comment": 1 if (publish and autoComment) else 0
