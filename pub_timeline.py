@@ -66,7 +66,7 @@ async def main(config_path: str):
 
         if 'poem' in json_data:
             poem_path = json_data['poem']
-            with open(poem_path, 'r') as file:
+            with open(poem_path, 'r', encoding='utf8') as file:
                 poem = file.read()
         else:
             poem = ''
