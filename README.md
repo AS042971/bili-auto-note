@@ -84,7 +84,10 @@
         "ignoreThreshold": 600,
         "output": "./data/output.txt",
         "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-        "preface": "【注意】今天也要开开心心地看录播",
+        "preface": "【注意】今天也要开开心心地看录播。可点击上方按钮快速跳过OP。",
+        "prefaceNone": "【注意】今天也要开开心心地看录播。当前时间轴正在制作或审核中，请小伙伴们耐心等待。审核通过后会在置顶评论区回复内通知。小伙伴们可以先点击上方按钮跳过OP，或读一读下方的定场诗",
+        "jumpOP": true,
+        "poem": "./data/poem.txt",
         "songAndDanceAbstract": true,
         "publish": true,
         "watch": false
@@ -103,6 +106,9 @@
 * `output`: 文本轴输出路径
 * `cover`: 视频转制通过时发送至评论区的文案
 * `preface`: 笔记开头的文案
+* `prefaceNone`: 没有正式发布时笔记开头的文案
+* `jumpOP`: 是否生成跳过op的按钮
+* `poem`: 诗歌文件路径
 * `songAndDanceAbstract`: 在笔记开头添加歌舞快速导航
 * `publish`: 是否自动发布
 * `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出

@@ -54,9 +54,27 @@ async def main(config_path: str):
         else:
             song_and_dance = True
 
+        if 'prefaceNone' in json_data:
+            prefaceNone = json_data['prefaceNone']
+        else:
+            prefaceNone = ''
+
+        if 'jumpOP' in json_data:
+            jumpOP = json_data['jumpOP']
+        else:
+            jumpOP = False
+
+        if 'poem' in json_data:
+            poem_path = json_data['poem']
+            with open(poem_path, 'r') as file:
+                poem = file.read()
+        else:
+            poem = ''
+
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance)
+
+            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -77,11 +95,11 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记，需要进行确认
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output, preface=preface, songAndDance=song_and_dance)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts

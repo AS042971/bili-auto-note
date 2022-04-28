@@ -59,7 +59,10 @@ class BilibiliNoteHelper:
             autoComment: bool = True,
             output: str = '',
             songAndDance = True,
-            preface = ''
+            preface = '',
+            prefaceNone = '',
+            poem = '',
+            jumpOP = False
         ) -> List[str]:
         """发送笔记
 
@@ -133,21 +136,26 @@ class BilibiliNoteHelper:
             if command != 'Y' and command != 'y':
                 return []
 
+        # 开始生成笔记
         current_timestamp = 0
         current_danmaku_timestamp = 0
         video_part_index = 0
         video_part_danmaku_index = 0
 
-        submit_obj = []
-        submit_len = 0
+        first_part = True
+        first_danmaku_part = True
+
+        op_obj = []
+        op_len = 0
+
+        main_obj = []
+        main_len = 0
 
         song_dance_obj = []
         song_dance_len = 0
         song_dance_collection = []
 
         txt_timeline = ''
-
-        has_title = timeline.hasTitle()
 
         if songAndDance:
             (song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
@@ -160,6 +168,9 @@ class BilibiliNoteHelper:
             if video_part.duration < ignoreThreshold:
                 continue
 
+            is_video_part_danmaku = '弹幕' in video_part.title and '无弹幕' not in video_part.title
+
+            # 读取分p对应的偏移量信息
             offset = 0
             if not danmakuOffsets:
                 # 所有分P统一由offsets管理
@@ -178,7 +189,7 @@ class BilibiliNoteHelper:
                     continue
             else:
                 # 分P分别由offsets和danmakuOffsets决定
-                if '弹幕' in video_part.title and '无弹幕' not in video_part.title:
+                if is_video_part_danmaku:
                     # 这是一个弹幕视频
                     if len(danmakuOffsets) == 0 or video_part_danmaku_index >= len(danmakuOffsets):
                         raw_offset = 'auto'
@@ -209,26 +220,68 @@ class BilibiliNoteHelper:
                     else:
                         continue
 
+            if jumpOP and not is_video_part_danmaku and first_part:
+                first_part = False
+                op_obj.append({
+                    "insert": {
+                        "tag": {
+                            "cid": video_part.cid,
+                            "oid_type": 1,
+                            "status": 0,
+                            "index": video_part.index,
+                            "seconds": -offset,
+                            "cidCount": video_part.cidCount,
+                            "key": str(round(time.time()*1000)),
+                            "title": "纯净版点此跳过OP",
+                            "epid": 0
+                        }
+                    }
+                })
+                op_obj.append({ "insert": "\n" })
+                op_len += 2
+
+            if jumpOP and is_video_part_danmaku and first_danmaku_part:
+                first_danmaku_part = False
+                op_obj.append({
+                    "insert": {
+                        "tag": {
+                            "cid": video_part.cid,
+                            "oid_type": 1,
+                            "status": 0,
+                            "index": video_part.index,
+                            "seconds": -offset,
+                            "cidCount": video_part.cidCount,
+                            "key": str(round(time.time()*1000)),
+                            "title": "弹幕版点此跳过OP",
+                            "epid": 0
+                        }
+                    }
+                })
+                op_obj.append({ "insert": "\n" })
+                op_len += 2
+
             # 从原始时间轴中切出分p时间轴
             part_timeline = timeline.clip(offset, video_part.duration)
             if len(part_timeline.items) == 0:
                 continue
 
+
+            # 将分p时间轴保存到文本文件
             txt_timeline += (video_part.title)
             txt_timeline += '\n'
             txt_timeline += str(part_timeline)
             txt_timeline += '\n\n'
 
-            background = "#73fdea" if '弹幕' in video_part.title and '无弹幕' not in video_part.title else "#fff359"
-
+            # 添加分p标题和内容
+            background = "#73fdea" if is_video_part_danmaku else "#fff359"
             (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
-            submit_obj.extend(title_obj)
-            submit_len += title_len
-
+            main_obj.extend(title_obj)
+            main_len += title_len
             (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
-            submit_obj.extend(timeline_obj)
-            submit_len += timeline_len
+            main_obj.extend(timeline_obj)
+            main_len += timeline_len
 
+            # 筛选分p的歌舞成分
             if songAndDance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
@@ -238,6 +291,7 @@ class BilibiliNoteHelper:
                     else:
                         for item in part_result:
                             found = False
+                            # 合并同名项目
                             for ref in song_dance_collection:
                                 if item[0] == ref[0]:
                                     ref[1].insert(len(item[1])-3, item[1][0])
@@ -247,20 +301,67 @@ class BilibiliNoteHelper:
                             if not found:
                                 song_dance_collection.append(item)
 
-        if not submit_obj:
+        # 插入诗歌
+        poem_obj = []
+        poem_len = 0
+        if poem:
+            (poem_title_obj, poem_title_len) = TimelineConverter.getTitleJson('定场诗', background="#f8ba00")
+            poem_obj.extend(poem_title_obj)
+            poem_len += poem_title_len
+            poem_lines = poem.split('\n')
+            for poem_line in poem_lines:
+                poem_obj.append({
+                    "insert": poem_line
+                })
+                poem_obj.append({
+                    "attributes": {
+                        "align": "center"
+                    },
+                    "insert": '\n'
+                })
+                poem_len += len(poem_line) + 1
+
+        if not main_obj and not poem_obj:
             print('没有可用的笔记内容')
             return part_collection
 
+        # 合成
         final_submit_obj = []
         final_submit_len = 0
 
-        if preface:
-            final_submit_obj.append({
-                "insert": preface
-            })
-            final_submit_obj.append({ "insert": "\n" })
-            final_submit_len += len(preface) + 1
+        # 插入OP跳转
+        if op_obj:
+            final_submit_obj.extend(op_obj)
+            final_submit_len += op_len
 
+        # 插入前言
+        if main_obj:
+            if preface:
+                final_submit_obj.append({
+                    "insert": preface
+                })
+                final_submit_obj.append({ "insert": "\n" })
+                final_submit_len += len(preface) + 1
+        else:
+            if prefaceNone:
+                final_submit_obj.append({
+                    "insert": prefaceNone
+                })
+                final_submit_obj.append({ "insert": "\n" })
+                final_submit_len += len(prefaceNone) + 1
+            elif preface:
+                final_submit_obj.append({
+                    "insert": preface
+                })
+                final_submit_obj.append({ "insert": "\n" })
+                final_submit_len += len(preface) + 1
+
+        # 插入诗歌
+        if poem_obj:
+            final_submit_obj.extend(poem_obj)
+            final_submit_len += poem_len
+
+        # 插入歌舞导航
         if songAndDance and song_dance_collection:
             for item in song_dance_collection:
                 song_dance_obj.extend(item[1])
@@ -268,8 +369,9 @@ class BilibiliNoteHelper:
             final_submit_obj.extend(song_dance_obj)
             final_submit_len += song_dance_len
 
-        final_submit_obj.extend(submit_obj)
-        final_submit_len += submit_len
+        # 插入主轴
+        final_submit_obj.extend(main_obj)
+        final_submit_len += main_len
 
         if output:
             # 将文本轴存储在文件中

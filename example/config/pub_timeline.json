@@ -8,7 +8,10 @@
     "ignoreThreshold": 600,
     "output": "./data/output.txt",
     "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-    "preface": "【注意】今天也要开开心心地看录播",
+    "preface": "【注意】今天也要开开心心地看录播。可点击上方按钮快速跳过OP。",
+    "prefaceNone": "【注意】今天也要开开心心地看录播。当前时间轴正在制作或审核中，请小伙伴们耐心等待。审核通过后会在置顶评论区回复内通知。小伙伴们可以先点击上方按钮跳过OP，或读一读下方的定场诗",
+    "jumpOP": true,
+    "poem": "./data/poem.txt",
     "songAndDanceAbstract": true,
     "publish": false,
     "watch": false

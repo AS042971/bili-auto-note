@@ -79,6 +79,19 @@
       "type": "string",
       "maxLength": 1024
     },
+    "prefaceNone": {
+      "description": "没有正式发布笔记时，笔记轴开头的文本",
+      "type": "string",
+      "maxLength": 1024
+    },
+    "jumpOP": {
+      "description": "是否生成跳过op的按钮",
+      "type": "boolean"
+    },
+    "poem": {
+      "description": "诗歌文件路径",
+      "type": "string"
+    },
     "songAndDanceAbstract": {
       "description": "是否生成歌舞摘要",
       "type": "boolean"
