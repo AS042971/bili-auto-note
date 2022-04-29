@@ -63,7 +63,8 @@ class BilibiliNoteHelper:
             preface = '',
             prefaceNone = '',
             poem = '',
-            jumpOP = False
+            jumpOP = False,
+            imgNone = ''
         ) -> List[str]:
         """发送笔记
 
@@ -233,7 +234,7 @@ class BilibiliNoteHelper:
                             "seconds": -offset,
                             "cidCount": video_part.cidCount,
                             "key": str(round(time.time()*1000)),
-                            "title": "纯净版点此跳过OP",
+                            "title": "🪂点此跳过OP (纯净版)",
                             "epid": 0
                         }
                     }
@@ -253,7 +254,7 @@ class BilibiliNoteHelper:
                             "seconds": -offset,
                             "cidCount": video_part.cidCount,
                             "key": str(round(time.time()*1000)),
-                            "title": "弹幕版点此跳过OP",
+                            "title": "🪂点此跳过OP (弹幕版)",
                             "epid": 0
                         }
                     }
@@ -286,7 +287,9 @@ class BilibiliNoteHelper:
             if songAndDance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
-                    part_result = TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part)
+                    custom_title = ' (弹幕版)' if is_video_part_danmaku else ' (纯净版)'
+                    custom_title = "P" + str(video_part.index) + custom_title
+                    part_result = TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
                     else:
@@ -383,12 +386,12 @@ class BilibiliNoteHelper:
                 print('文本轴写入失败，错误原因：')
                 print(e)
 
-        if not main_obj:
+        if not main_obj and imgNone:
             # 插入羊驼滑跪图
             final_submit_obj.append({
                 "insert": {
                     "imageUpload": {
-                    "url": "//api.bilibili.com/x/note/image?image_id=124497",
+                    "url": imgNone,
                     "status": "done",
                     "width": 315,
                     "id": "IMAGE_" + str(round(time.time()*1000))

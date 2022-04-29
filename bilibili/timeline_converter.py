@@ -42,7 +42,7 @@ class TimelineConverter:
         return (obj, len(title) + 10)
 
     @staticmethod
-    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo) -> Tuple[list, int]:
+    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -57,6 +57,7 @@ class TimelineConverter:
         if tagContent.startswith('##'):
             return TimelineConverter.getTitleJson(tagContent[2:], background=None, small=True)
         else:
+            title = customTitle if customTitle else "P" + str(info.index)
             obj = []
             # 时间胶囊
             obj.append({
@@ -69,7 +70,7 @@ class TimelineConverter:
                         "seconds": item.sec,
                         "cidCount": info.cidCount,
                         "key": str(round(time.time()*1000)),
-                        "title": "P" + str(info.index),
+                        "title": title,
                         "epid": 0
                     }
                 }
@@ -120,7 +121,7 @@ class TimelineConverter:
             return (obj, len(tagContent) + 8)
 
     @staticmethod
-    def getTimelineJson(timeline: Timeline, info: VideoPartInfo) -> Tuple[list, int]:
+    def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴json对象
 
         Args:
@@ -134,14 +135,14 @@ class TimelineConverter:
         content_len = 0
         # 内容
         for item in timeline.items:
-            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info)
+            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info, customTitle)
             obj.extend(item_obj)
             content_len += item_len
         content_len += 1
         return (obj, content_len)
 
     @staticmethod
-    def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo) -> List[List]:
+    def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> List[List]:
         """生成分条目的时间戳
 
         Args:
@@ -153,7 +154,7 @@ class TimelineConverter:
         """
         results = []
         for item in timeline.items:
-            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info)
+            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info, customTitle)
             results.append([item.tag, item_obj, item_len])
         return results
 

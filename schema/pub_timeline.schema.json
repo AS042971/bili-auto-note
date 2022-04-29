@@ -103,6 +103,15 @@
     "watch": {
       "description": "是否监控视频和笔记更新",
       "type": "boolean"
+    },
+    "confirm": {
+      "description": "发布前是否确认",
+      "type": "boolean"
+    },
+    "imgNode": {
+      "description": "没有笔记的时候填充的图片",
+      "type": "string",
+      "maxLength": 1024
     }
   },
   "required": [
