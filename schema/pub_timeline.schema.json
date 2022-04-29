@@ -100,6 +100,10 @@
       "description": "是否自动发布",
       "type": "boolean"
     },
+    "autoComment": {
+      "description": "是否发布完自动投评论",
+      "type": "boolean"
+    },
     "watch": {
       "description": "是否监控视频和笔记更新",
       "type": "boolean"

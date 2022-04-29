@@ -14,6 +14,7 @@
     "poem": "./data/poem.txt",
     "songAndDanceAbstract": true,
     "publish": false,
+    "autoComment": true,
     "watch": false,
     "confirm": true,
     "imgNone": "//api.bilibili.com/x/note/image?image_id=124497"

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from enum import auto
 from bilibili import BilibiliAgent, BilibiliNoteHelper, TimelineConverter
 import asyncio
 import sys
@@ -81,10 +82,15 @@ async def main(config_path: str):
         else:
             img_none = False
 
+        if 'autoComment' in json_data:
+            auto_comment = json_data['autoComment']
+        else:
+            auto_comment = True
+
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
 
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, confirmed=not confirm, imgNone=img_none)
+            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, confirmed=not confirm, imgNone=img_none, autoComment=auto_comment)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -105,7 +111,7 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=not confirm, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=not confirm, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, autoComment=auto_comment)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布

@@ -90,6 +90,7 @@
         "poem": "./data/poem.txt",
         "songAndDanceAbstract": true,
         "publish": true,
+        "autoComment": true,
         "watch": false,
         "confirm": false,
         "imgNone": "//api.bilibili.com/x/note/image?image_id=124497"
@@ -113,6 +114,7 @@
 * `poem`: 诗歌文件路径
 * `songAndDanceAbstract`: 在笔记开头添加歌舞快速导航
 * `publish`: 是否自动发布
+* `autoComment`: 笔记发布后是否自动发评论
 * `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出
 * `confirm`: 是否弹出确认选项
 * `imgNone`: 没有时间轴时笔记内的临时插图。可以登录笔记发布账号，在任意位置的笔记中上传一张图片（如`data`中的那张图），再右键在新标签页中打开即可获得地址
