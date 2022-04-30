@@ -2,6 +2,7 @@
     "$schema": "../schema/pub_timeline.schema.json",
     "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
     "bvid": "BV15U4y1d7TX",
+    "customVideoInfo": "",
     "timeline": "./data/timeline.csv",
     "offsets": [-52, "auto"],
     "danmakuOffsets": [-52, "auto"],

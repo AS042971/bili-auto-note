@@ -64,7 +64,8 @@ class BilibiliNoteHelper:
             prefaceNone = '',
             poem = '',
             jumpOP = False,
-            imgNone = ''
+            imgNone = '',
+            customVideoInfo = ''
         ) -> List[str]:
         """发送笔记
 
@@ -90,6 +91,12 @@ class BilibiliNoteHelper:
             params={
                 "bvid": bvid
             })
+        if customVideoInfo:
+            with open(customVideoInfo, 'r', encoding='utf8') as fp:
+                json_data = json.load(fp)
+                if json_data:
+                    video_info_res['pages'] = json_data
+
         video_info = BilibiliNoteHelper.getVideoInfo(video_info_res)
         part_collection = [part.cid for part in video_info.parts]
         if previousPartCollection == part_collection:
