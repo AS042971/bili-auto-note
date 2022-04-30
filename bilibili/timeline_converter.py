@@ -15,6 +15,7 @@ class TimelineConverter:
             params={
                 "bvid": bvid
         })
+        await agent.close()
         return video_info_res['title']
 
     @staticmethod
@@ -92,41 +93,73 @@ class TimelineConverter:
                 "attributes": { "color": "#cccccc" },
                 "insert": "  └─ "
             })
+            contentType = ''
             if tagContent.endswith('**'):
                 tagContent = tagContent[:-2]
-                obj.append({
-                    "attributes": {
-                        "color": "#ee230d",
-                        "bold": True
-                    },
-                    "insert": tagContent
-                })
+                contentType = 'ex_mark'
             elif tagContent.endswith('*'):
                 tagContent = tagContent[:-1]
-                obj.append({
-                    "attributes": {
-                        "color": "#ee230d"
-                    },
-                    "insert": tagContent
-                })
+                contentType = 'mark'
             elif tagContent.startswith('🎤'):
+                contentType = 'song'
+            elif tagContent.startswith('💃'):
+                contentType = 'dance'
+
+            contentParts = re.split('(BV[A-Za-z0-9]{10})',tagContent)
+            for part in contentParts:
+                if (re.match('(BV[A-Za-z0-9]{10})', part)):
+                    title = await TimelineConverter.getBvTitle(part)
+                    title = '▶️' + title
                     obj.append({
                         "attributes": {
-                            "color": "#0b84ed"
+                            "color": "#0b84ed",
+                            "link": "https://www.bilibili.com/video/" + part
                         },
-                        "insert": tagContent
+                        "insert": title
                     })
-            elif tagContent.startswith('💃'):
+                else:
+                    if contentType == 'ex_mark':
+                        obj.append({
+                            "attributes": {
+                                "color": "#ee230d",
+                                "bold": True
+                            },
+                            "insert": part
+                        })
+                    elif contentType == 'mark':
+                        obj.append({
+                            "attributes": {
+                                "color": "#ee230d"
+                            },
+                            "insert": part
+                        })
+                    elif contentType == 'song':
+                        obj.append({
+                            "attributes": {
+                                "color": "#0b84ed"
+                            },
+                            "insert": part
+                        })
+                    elif contentType == 'dance':
+                        obj.append({
+                            "attributes": {
+                                "color": "#1DB100",
+                            },
+                            "insert": part
+                        })
+                    else:
+                        obj.append({
+                            "insert": part
+                        })
+
+            if len(contentParts) > 1:
                 obj.append({
                     "attributes": {
-                        "color": "#1DB100"
+                        "color": "#cccccc",
                     },
-                    "insert": tagContent
+                    "insert": ' (手机端建议从评论回复中打开链接)'
                 })
-            else:
-                obj.append({
-                    "insert": tagContent
-                })
+
             obj.append({ "insert": "\n" })
             return (obj, len(tagContent) + 8)
 
