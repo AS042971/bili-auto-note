@@ -4,8 +4,19 @@ from typing import Tuple, List
 
 from .timeline import Timeline, TimelineItem
 from .video import VideoPartInfo
+from .agent import BilibiliAgent
 
 class TimelineConverter:
+    @staticmethod
+    async def getBvTitle(bvid: str) -> str:
+        agent = BilibiliAgent()
+        video_info_res = await agent.get(
+            "https://api.bilibili.com/x/web-interface/view",
+            params={
+                "bvid": bvid
+        })
+        return video_info_res['title']
+
     @staticmethod
     def getTitleJson(title: str, background="#fff359", small=False) -> Tuple[list, int]:
         obj = []
@@ -42,7 +53,7 @@ class TimelineConverter:
         return (obj, len(title) + 10)
 
     @staticmethod
-    def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
+    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -81,47 +92,46 @@ class TimelineConverter:
                 "attributes": { "color": "#cccccc" },
                 "insert": "  └─ "
             })
-            if item.highlight:
-                if tagContent.endswith('*'):
-                    tagContent = tagContent[:-1]
-                    obj.append({
-                        "attributes": {
-                            "color": "#ee230d",
-                            "bold": True
-                        },
-                        "insert": tagContent
-                    })
-                else:
-                    obj.append({
-                        "attributes": {
-                            "color": "#ee230d"
-                        },
-                        "insert": tagContent
-                    })
-            else:
-                if tagContent.startswith('🎤'):
+            if tagContent.endswith('**'):
+                tagContent = tagContent[:-2]
+                obj.append({
+                    "attributes": {
+                        "color": "#ee230d",
+                        "bold": True
+                    },
+                    "insert": tagContent
+                })
+            elif tagContent.endswith('*'):
+                tagContent = tagContent[:-1]
+                obj.append({
+                    "attributes": {
+                        "color": "#ee230d"
+                    },
+                    "insert": tagContent
+                })
+            elif tagContent.startswith('🎤'):
                     obj.append({
                         "attributes": {
                             "color": "#0b84ed"
                         },
                         "insert": tagContent
                     })
-                elif tagContent.startswith('💃'):
-                    obj.append({
-                        "attributes": {
-                            "color": "#1DB100"
-                        },
-                        "insert": tagContent
-                    })
-                else:
-                    obj.append({
-                        "insert": tagContent
-                    })
+            elif tagContent.startswith('💃'):
+                obj.append({
+                    "attributes": {
+                        "color": "#1DB100"
+                    },
+                    "insert": tagContent
+                })
+            else:
+                obj.append({
+                    "insert": tagContent
+                })
             obj.append({ "insert": "\n" })
             return (obj, len(tagContent) + 8)
 
     @staticmethod
-    def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
+    async def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴json对象
 
         Args:
@@ -135,14 +145,14 @@ class TimelineConverter:
         content_len = 0
         # 内容
         for item in timeline.items:
-            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            (item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
             obj.extend(item_obj)
             content_len += item_len
         content_len += 1
         return (obj, content_len)
 
     @staticmethod
-    def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> List[List]:
+    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> List[List]:
         """生成分条目的时间戳
 
         Args:
@@ -154,7 +164,7 @@ class TimelineConverter:
         """
         results = []
         for item in timeline.items:
-            (item_obj, item_len) = TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            (item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
             results.append([item.tag, item_obj, item_len])
         return results
 
@@ -164,12 +174,7 @@ class TimelineConverter:
         with open(path, "r", encoding="utf-8-sig") as f:
             csv_l = f.readlines()
         its = [c.replace("\n", "").split(",") for c in csv_l]
-        for i in range(len(its)):
-            if len(its[i]) >= 3 and its[i][2] == '1':
-                its[i][2] = True
-            else:
-                its[i][2] = False
-        items = [TimelineItem(int(it[0]), it[1], bool(it[2])) for it in its]
+        items = [TimelineItem(int(it[0]), it[1]) for it in its]
         return Timeline(items)
 
     @staticmethod
@@ -191,13 +196,8 @@ class TimelineConverter:
                 for t in reversed(time):
                     sec += int(t) * x
                     x *= 60
-                if li_re[1][-1] == "*":
-                    tag = li_re[1][:-1].replace(',', '，')
-                    highlight = True
-                else:
-                    tag = li_re[1].replace(',', '，')
-                    highlight = False
-                item = TimelineItem(sec=sec, tag=tag, highlight=highlight)
+                tag = li_re[1].replace(',', '，')
+                item = TimelineItem(sec=sec, tag=tag)
                 items.append(item)
             except Exception as e:
                 print(e)
@@ -218,7 +218,7 @@ class TimelineConverter:
             with open(path, "w", encoding="utf-8-sig") as f:
                 for item in timeline:
                     # 保存为秒
-                    f.write(f"{item.sec},{item.tag},{int(item.highlight)}\n")
+                    f.write(f"{item.sec},{item.tag}\n")
         except Exception as e:
             print(e)
             return False

@@ -1,38 +1,17 @@
 from enum import Enum, unique
 from typing import Iterator, List
 
-@unique
-class TimelineType(Enum):
-    NORMAL = ''
-    SONG = 'song'
-    DANCE = 'dance'
-
-@unique
-class Member(Enum):
-    AVA = 'a'
-    BELLA = 'b'
-    CAROL = 'c'
-    DIANA = 'd'
-    EILEEN = 'e'
-
 class TimelineItem:
     def __init__(self,
-                 sec: int, tag: str, highlight: bool = False,
-                 type: TimelineType = TimelineType.NORMAL, members: List[Member] = []) -> None:
+                 sec: int, tag: str) -> None:
         """时间轴条目
 
         Args:
             sec (int): 条目秒数
             tag (str): 条目内容
-            highlight (bool, optional): 是否高亮显示 Defaults to False.
-            type (TimelineType, optional): 条目特殊类型，如歌舞等 Defaults to TimelineType.NORMAL.
-            members (list[Member], optional): 特殊条目参与的成员 Defaults to [].
         """
         self.sec = sec
         self.tag = tag.strip()
-        self.highlight = highlight
-        self.type = type
-        self.members = members
 
     def shift(self, delta: int) -> 'TimelineItem':
         """生成调整后的时间轴条目
@@ -43,7 +22,7 @@ class TimelineItem:
         Returns:
             TimelineItem: 新生成的时间轴条目
         """
-        return TimelineItem(self.sec + delta, self.tag, self.highlight, self.type, self.members)
+        return TimelineItem(self.sec + delta, self.tag)
 
     def __str__(self) -> str:
         m, s = divmod(self.sec, 60)
@@ -102,7 +81,7 @@ class Timeline:
         Returns:
             Timeline: 仅含歌舞的时间轴
         """
-        sd_items = list(filter(lambda item: item.type == TimelineType.SONG or item.type == TimelineType.DANCE or item.tag.startswith('🎤') or item.tag.startswith('💃'), self.items))
+        sd_items = list(filter(lambda item: item.tag.startswith('🎤') or item.tag.startswith('💃'), self.items))
         return Timeline(sd_items)
 
     def hasTitle(self) -> bool:

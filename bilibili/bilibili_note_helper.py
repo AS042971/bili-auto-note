@@ -279,7 +279,7 @@ class BilibiliNoteHelper:
             (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
             main_obj.extend(title_obj)
             main_len += title_len
-            (timeline_obj, timeline_len) = TimelineConverter.getTimelineJson(part_timeline, video_part)
+            (timeline_obj, timeline_len) = await TimelineConverter.getTimelineJson(part_timeline, video_part)
             main_obj.extend(timeline_obj)
             main_len += timeline_len
 
@@ -289,7 +289,7 @@ class BilibiliNoteHelper:
                 if len(song_dance_timeline.items) != 0:
                     custom_title = ' (弹幕版)' if is_video_part_danmaku else ' (纯净版)'
                     custom_title = "P" + str(video_part.index) + custom_title
-                    part_result = TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
+                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
                     else:
