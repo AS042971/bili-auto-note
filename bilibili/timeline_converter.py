@@ -274,10 +274,18 @@ class TimelineConverter:
                         continue
                     if tag.endswith('**'):
                         tag = tag[:-2]
-                        tag = '🌟'+tag
-                    if tag.endswith('*'):
+                        tag = '🌟 '+tag
+                    elif tag.endswith('*'):
                         tag = tag[:-1]
-                        tag = '🌟'+tag
+                        tag = '🌟 '+tag
+                    elif tag.startswith('🎤'):
+                        if not tag.startswith('🎤 '):
+                            tag = '🎤 ' + tag[1:]
+                    elif tag.startswith('💃'):
+                        if not tag.startswith('💃 '):
+                            tag = '💃 ' + tag[1:]
+                    else:
+                        tag = '➖ '+tag
                     # 保存为毫秒
                     f.write(f"{idx}={item.sec * 1000}*{tag}*\n")
         except Exception as e:
