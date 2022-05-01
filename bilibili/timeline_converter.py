@@ -269,8 +269,17 @@ class TimelineConverter:
             with open(path, "w", encoding="utf-8") as f:
                 f.write("[Bookmark]\n")
                 for idx, item in enumerate(timeline):
+                    tag = item.tag
+                    if tag.startswith('##'):
+                        continue
+                    if tag.endswith('**'):
+                        tag = tag[:-2]
+                        tag = '🌟'+tag
+                    if tag.endswith('*'):
+                        tag = tag[:-1]
+                        tag = '🌟'+tag
                     # 保存为毫秒
-                    f.write(f"{idx}={item.sec * 1000}*{item.tag}*\n")
+                    f.write(f"{idx}={item.sec * 1000}*{tag}*\n")
         except Exception as e:
             print(e)
             return False
