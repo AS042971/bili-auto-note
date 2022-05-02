@@ -105,9 +105,11 @@ class TimelineConverter:
             elif tagContent.startswith('💃'):
                 contentType = 'dance'
 
-            contentParts = re.split('(BV[A-Za-z0-9]{10})',tagContent)
+            contentParts = re.split('(BV[A-Za-z0-9]{10})|(https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7})',tagContent)
             for part in contentParts:
-                if (re.match('(BV[A-Za-z0-9]{10})', part)):
+                if not part:
+                    continue
+                if re.match('BV[A-Za-z0-9]{10}', part):
                     title = await TimelineConverter.getBvTitle(part)
                     title = '▶️' + title
                     obj.append({
@@ -116,6 +118,14 @@ class TimelineConverter:
                             "link": "https://www.bilibili.com/video/" + part
                         },
                         "insert": title
+                    })
+                elif re.match('https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7}', part):
+                    obj.append({
+                        "attributes": {
+                            "color": "#0b84ed",
+                            "link": part
+                        },
+                        "insert": '🔗打开链接'
                     })
                 else:
                     if contentType == 'ex_mark':
