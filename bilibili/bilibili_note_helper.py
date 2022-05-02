@@ -200,6 +200,10 @@ class BilibiliNoteHelper:
                 # 分P分别由offsets和danmakuOffsets决定
                 if is_video_part_danmaku:
                     # 这是一个弹幕视频
+                    if video_part_danmaku_index == 0 and ('中' in video_part.title or '下' in video_part.title):
+                        video_part_danmaku_index = 1
+                        current_danmaku_timestamp = current_timestamp
+                        first_danmaku_part = False
                     if len(danmakuOffsets) == 0 or video_part_danmaku_index >= len(danmakuOffsets):
                         raw_offset = 'auto'
                     else:
@@ -215,6 +219,10 @@ class BilibiliNoteHelper:
                         continue
                 else:
                     # 这是一个无弹幕视频
+                    if video_part_index == 0 and ('中' in video_part.title or '下' in video_part.title):
+                        video_part_index = 1
+                        current_timestamp = current_danmaku_timestamp
+                        first_part = False
                     if len(offsets) == 0 or video_part_index >= len(offsets):
                         raw_offset = 'auto'
                     else:
