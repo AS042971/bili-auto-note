@@ -103,7 +103,7 @@ async def main(config_path: str):
             published_parts = []
             modify_time = os.path.getmtime(json_data['timeline'])
             first_time = True
-            # 退出循环条件：连续失败30次（120分钟）或分P数量和标记数量一致且时间轴2小时内均未更新
+            # 退出循环条件：必须手动退出循环
             while True:
                 try:
                     wait_cnt += 1
