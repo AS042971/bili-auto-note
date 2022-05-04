@@ -104,7 +104,7 @@ async def main(config_path: str):
             modify_time = os.path.getmtime(json_data['timeline'])
             first_time = True
             # 退出循环条件：连续失败30次（120分钟）或分P数量和标记数量一致且时间轴2小时内均未更新
-            while failed_cnt <= 30 and (len(published_parts) != len(offsets) + len(danmaku_offsets) or modify_time + 7200 > time.time()):
+            while True:
                 try:
                     wait_cnt += 1
                     print(f'正在开始第 {wait_cnt} 次任务 ...')
