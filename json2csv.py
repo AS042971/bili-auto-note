@@ -10,7 +10,7 @@ def delta2str(delta: float) -> str:
     h, m = divmod(m, 60)
     return "%02d:%02d:%02d" % (h, m, s)
 
-async def parseFile(jsonl_path: str, dm_path: str, sc_path: str):
+async def parseFile(jsonl_path: str):
     dm_cnt = 0
     sc_cnt = 0
     total_cnt = 0
@@ -60,7 +60,6 @@ async def parseFile(jsonl_path: str, dm_path: str, sc_path: str):
                     users[uid] = None
                 sc_list.append((delta_time, uid, uname, message, price))
 
-
     print(f'存储{dm_cnt}条弹幕中')
     print(f'共{len(users)}个发SC用户')
 
@@ -79,24 +78,33 @@ async def parseFile(jsonl_path: str, dm_path: str, sc_path: str):
         }) as res:
             result = await res.json()
             regtime = result['card']['regtime']
-            users[uid] = (regtime, )
-            await asyncio.sleep(0.1)
+            level = result['card']['level_info']['current_level']
+            users[uid] = (regtime, level)
+            await asyncio.sleep(0.05)
         if (index % 10 == 0):
             print(f'{index} / {len(users)}')
     await session.close()
 
-    with open(dm_path, "w", encoding="utf-8-sig") as f:
+    with open('dm.csv', "w", encoding="utf-8-sig") as f:
+        f.write("时间,UID,用户名,弹幕内容\n")
         for item in dm_list:
             uid = item[1]
             f.write(f"{delta2str(item[0])},{uid},{item[2].replace(',','，')},{item[3].replace(',','，')}\n")
 
-    with open(sc_path, "w", encoding="utf-8-sig") as f:
+    with open('sc.csv', "w", encoding="utf-8-sig") as f:
+        f.write("时间,UID,用户名,注册时间,用户等级,SC内容,金额\n")
         for item in sc_list:
             uid = item[1]
             reg_time = users[uid][0]
-            f.write(f"{delta2str(item[0])},{uid},{item[2].replace(',','，')},{datetime.datetime.fromtimestamp(reg_time)},{item[3].replace(',','，')},{item[4]}\n")
+            level_info = users[uid][1]
+            sc_content = item[3].replace(',','，').replace('\n','')
+            f.write(f"{delta2str(item[0])},{uid},{item[2].replace(',','，')},{datetime.datetime.fromtimestamp(reg_time)},{level_info},{sc_content},{item[4]}\n")
 
 if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(parseFile('./test.jsonl', './dm.csv', './sc.csv'))
+    if len(sys.argv) == 1:
+        print(f'Usage: json2csv.py path_to.jsonl')
+        sys.exit(-1)
+    else:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(parseFile(sys.argv[1]))
