@@ -87,6 +87,11 @@ async def main(config_path: str):
         else:
             img_none = False
 
+        if 'imgCover' in json_data:
+            img_cover = json_data['imgCover']
+        else:
+            img_cover = False
+
         if 'autoComment' in json_data:
             auto_comment = json_data['autoComment']
         else:
@@ -95,7 +100,7 @@ async def main(config_path: str):
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
 
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, confirmed=not confirm, imgNone=img_none, autoComment=auto_comment, customVideoInfo=custom_video_info)
+            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, confirmed=not confirm, imgNone=img_none, imgCover=img_cover, autoComment=auto_comment, customVideoInfo=custom_video_info)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -116,11 +121,11 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=not confirm, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, autoComment=auto_comment, customVideoInfo=custom_video_info)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=not confirm, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, imgCover=img_cover, autoComment=auto_comment, customVideoInfo=custom_video_info)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, customVideoInfo=custom_video_info)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, imgCover=img_cover,customVideoInfo=custom_video_info)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts
@@ -142,10 +147,6 @@ async def main(config_path: str):
                         await asyncio.sleep(5)
                         print('*', end='', flush=True)
                     print(' ', end='', flush=True)
-            if failed_cnt > 30:
-                print('程序因在120分钟内连续多次失败退出，请检查日志输出')
-            else:
-                print('视频分P数量已达到要求，且轴文件已长时间未更新，程序自动退出')
         await agent.close()
 
 if __name__ == '__main__':

@@ -116,6 +116,11 @@
       "description": "没有笔记的时候填充的图片",
       "type": "string",
       "maxLength": 1024
+    },
+    "imgCover": {
+      "description": "笔记封面照片",
+      "type": "string",
+      "maxLength": 1024
     }
   },
   "required": [

@@ -65,6 +65,7 @@ class BilibiliNoteHelper:
             poem = '',
             jumpOP = False,
             imgNone = '',
+            imgCover = '',
             customVideoInfo = ''
         ) -> List[str]:
         """发送笔记
@@ -374,6 +375,20 @@ class BilibiliNoteHelper:
                 })
                 final_submit_obj.append({ "insert": "\n" })
                 final_submit_len += len(preface) + 1
+
+        if main_obj and imgCover:
+            # 插入封面图
+            final_submit_obj.append({
+                "insert": {
+                    "imageUpload": {
+                    "url": imgCover,
+                    "status": "done",
+                    "width": 315,
+                    "id": "IMAGE_" + str(round(time.time()*1000))
+                    }
+                }
+            })
+            final_submit_obj.append({ "insert": "\n" })
 
         # 插入诗歌
         if poem_obj:
