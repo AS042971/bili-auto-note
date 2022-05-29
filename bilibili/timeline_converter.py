@@ -69,21 +69,23 @@ class TimelineConverter:
         if tagContent.startswith('##'):
             return TimelineConverter.getTitleJson(tagContent[2:], background=None, small=True)
         else:
-            title = customTitle if customTitle else "P" + str(info.index)
+            title = "P" + str(info.index)
+            desc = customTitle
             obj = []
             # 时间胶囊
             obj.append({
                 "insert": {
                     "tag": {
                         "cid": info.cid,
-                        "oid_type": 1,
+                        "oid_type": 0,
                         "status": 0,
                         "index": info.index,
                         "seconds": item.sec,
                         "cidCount": info.cidCount,
                         "key": str(round(time.time()*1000)),
-                        "title": title,
-                        "epid": 0
+                        "title": "",
+                        "epid": 0,
+                        "desc": desc
                     }
                 }
             })

@@ -244,13 +244,14 @@ class BilibiliNoteHelper:
                     "insert": {
                         "tag": {
                             "cid": video_part.cid,
-                            "oid_type": 1,
+                            "oid_type": 0,
                             "status": 0,
                             "index": video_part.index,
                             "seconds": -offset,
                             "cidCount": video_part.cidCount,
                             "key": str(round(time.time()*1000)),
-                            "title": "🪂点此跳过OP (纯净版)",
+                            "desc": "🪂点此跳过OP (纯净版)",
+                            "title": "",
                             "epid": 0
                         }
                     }
@@ -264,13 +265,14 @@ class BilibiliNoteHelper:
                     "insert": {
                         "tag": {
                             "cid": video_part.cid,
-                            "oid_type": 1,
+                            "oid_type": 0,
                             "status": 0,
                             "index": video_part.index,
                             "seconds": -offset,
                             "cidCount": video_part.cidCount,
                             "key": str(round(time.time()*1000)),
-                            "title": "🪂点此跳过OP (弹幕版)",
+                            "desc": "🪂点此跳过OP (弹幕版)",
+                            "title": "",
                             "epid": 0
                         }
                     }
@@ -304,7 +306,6 @@ class BilibiliNoteHelper:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
                     custom_title = ' (弹幕版)' if is_video_part_danmaku else ' (纯净版)'
-                    custom_title = "P" + str(video_part.index) + custom_title
                     part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
@@ -314,7 +315,7 @@ class BilibiliNoteHelper:
                             # 合并同名项目
                             for ref in song_dance_collection:
                                 if item[0] == ref[0]:
-                                    ref[1].insert(len(item[1])-3, item[1][0])
+                                    ref[1].insert(1, item[1][0])
                                     ref[2] += 1
                                     found = True
                                     break
