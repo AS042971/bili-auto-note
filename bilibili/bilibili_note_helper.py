@@ -173,9 +173,9 @@ class BilibiliNoteHelper:
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
 
-        (_, main_title_obj, main_title_len) = TimelineConverter.getTitleJson('正片', background="#fff359")
-        main_obj.extend(main_title_obj)
-        main_len += main_title_len
+        # (_, main_title_obj, main_title_len) = TimelineConverter.getTitleJson('正片', background="#fff359")
+        # main_obj.extend(main_title_obj)
+        # main_len += main_title_len
 
         # 插入每个分P的轴
         for video_part in video_info.parts:
@@ -317,6 +317,7 @@ class BilibiliNoteHelper:
                             if item[0] == ref[0]:
                                 ref[1].extend(item[1])
                                 ref[3] += 1
+                                ref[4].extend(item[4])
                                 found = True
                                 break
                         if not found:
@@ -448,11 +449,25 @@ class BilibiliNoteHelper:
         # final_submit_len += main_len
 
         if main_collection:
+            last_titles = []
             for item in main_collection:
-                # main_obj.append({
-                #     "attributes": { "color": "#cccccc" },
-                #     "insert": "┌ "
-                # })
+                if item[4] != last_titles:
+                    if len(item[4]) == 1:
+                        is_video_part_danmaku1 = '弹幕' in item[4][0] and '无弹幕' not in item[4][0]
+                        background1 = "#73fdea" if is_video_part_danmaku1 else "#fff359"
+                        (_, title_obj, title_len) = TimelineConverter.getTitleJson(item[4][0], background1)
+                        main_obj.extend(title_obj)
+                        main_len += title_len
+                    else:
+                        is_video_part_danmaku1 = '弹幕' in item[4][0] and '无弹幕' not in item[4][0]
+                        background1 = "#73fdea" if is_video_part_danmaku1 else "#fff359"
+                        is_video_part_danmaku2 = '弹幕' in item[4][1] and '无弹幕' not in item[4][1]
+                        background2 = "#73fdea" if is_video_part_danmaku2 else "#fff359"
+
+                        (_, title_obj, title_len) = TimelineConverter.getMultiTitleJson(item[4][0], item[4][1], background1, background2)
+                        main_obj.extend(title_obj)
+                        main_len += title_len
+
                 if item[1][0]:
                     for i, o in enumerate(item[1]):
                         main_obj.append(o)
@@ -470,6 +485,7 @@ class BilibiliNoteHelper:
                     })
                 main_obj.extend(item[2])
                 main_len += item[3]
+                last_titles = item[4]
             final_submit_obj.extend(main_obj)
             final_submit_len += main_len
 

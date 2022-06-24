@@ -54,6 +54,45 @@ class TimelineConverter:
         return ({}, obj, len(title) + 10)
 
     @staticmethod
+    def getMultiTitleJson(title: str, title2: str, background="#fff359", background2="#fff359") -> Tuple[dict, list, int]:
+        obj = []
+        obj.append({ "insert": "\n" })
+        size = "18px"
+        obj.append({
+            "attributes": {
+                "size": size,
+                "background": background,
+                "bold": True,
+                "align": "center"
+            },
+            "insert": title
+        })
+        obj.append({
+            "attributes": {
+                "size": size,
+                "bold": True,
+                "align": "center"
+            },
+            "insert": " / "
+        })
+        obj.append({
+            "attributes": {
+                "size": size,
+                "background": background2,
+                "bold": True,
+                "align": "center"
+            },
+            "insert": title2
+        })
+        obj.append({
+            "attributes": {
+                "align": "center"
+            },
+            "insert": "\n"
+        })
+        return ({}, obj, len(title) + 10)
+
+    @staticmethod
     async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[dict, list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
@@ -211,7 +250,7 @@ class TimelineConverter:
         results = []
         for item in timeline.items:
             (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
-            results.append([item.tag, [time_obj], item_obj, item_len])
+            results.append([item.tag, [time_obj], item_obj, item_len, [info.title]])
         return results
 
     @staticmethod
