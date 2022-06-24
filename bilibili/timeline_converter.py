@@ -22,7 +22,7 @@ class TimelineConverter:
     def getTitleJson(title: str, background="#fff359", small=False) -> Tuple[dict, list, int]:
         obj = []
         obj.append({ "insert": "\n" })
-        size = "16px" if small else "18px"
+        size = "17px" if small else "18px"
         if background:
             ex_space = int((16 - len(title)) / 2)
             for _ in range(ex_space):
@@ -57,6 +57,12 @@ class TimelineConverter:
     def getMultiTitleJson(title: str, title2: str, background="#fff359", background2="#fff359") -> Tuple[dict, list, int]:
         obj = []
         obj.append({ "insert": "\n" })
+
+        ex_space = int((15 - len(title) - len(title2)) / 4)
+        for _ in range(ex_space):
+            title = "　" + title + "　"
+        for _ in range(ex_space):
+            title2 = "　" + title2 + "　"
         size = "18px"
         obj.append({
             "attributes": {
