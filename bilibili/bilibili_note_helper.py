@@ -160,6 +160,7 @@ class BilibiliNoteHelper:
 
         main_obj = []
         main_len = 0
+        main_collection = []
 
         song_dance_obj = []
         song_dance_len = 0
@@ -171,6 +172,10 @@ class BilibiliNoteHelper:
             (_, song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
+
+        (_, main_title_obj, main_title_len) = TimelineConverter.getTitleJson('正片', background="#fff359")
+        main_obj.extend(main_title_obj)
+        main_len += main_title_len
 
         # 插入每个分P的轴
         for video_part in video_info.parts:
@@ -258,7 +263,6 @@ class BilibiliNoteHelper:
                 })
                 op_obj.append({ "insert": "\n" })
                 op_len += 2
-
             if jumpOP and is_video_part_danmaku and first_danmaku_part:
                 first_danmaku_part = False
                 op_obj.append({
@@ -285,7 +289,6 @@ class BilibiliNoteHelper:
             if len(part_timeline.items) == 0:
                 continue
 
-
             # 将分p时间轴保存到文本文件
             txt_timeline += (video_part.title)
             txt_timeline += '\n'
@@ -293,13 +296,31 @@ class BilibiliNoteHelper:
             txt_timeline += '\n\n'
 
             # 添加分p标题和内容
-            background = "#73fdea" if is_video_part_danmaku else "#fff359"
-            (_, title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
-            main_obj.extend(title_obj)
-            main_len += title_len
-            (timeline_obj, timeline_len) = await TimelineConverter.getTimelineJson(part_timeline, video_part)
-            main_obj.extend(timeline_obj)
-            main_len += timeline_len
+            # background = "#73fdea" if is_video_part_danmaku else "#fff359"
+            # (_, title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
+            # main_obj.extend(title_obj)
+            # main_len += title_len
+            # (timeline_obj, timeline_len) = await TimelineConverter.getTimelineJson(part_timeline, video_part)
+            # main_obj.extend(timeline_obj)
+            # main_len += timeline_len
+
+            if len(part_timeline.items) != 0:
+                custom_title = '弹' if is_video_part_danmaku else '纯'
+                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title)
+                if not main_collection:
+                    main_collection = part_result
+                else:
+                    for item in part_result:
+                        found = False
+                        # 合并同名项目
+                        for ref in main_collection:
+                            if item[0] == ref[0]:
+                                ref[1].extend(item[1])
+                                ref[3] += 1
+                                found = True
+                                break
+                        if not found:
+                            main_collection.append(item)
 
             # 筛选分p的歌舞成分
             if songAndDance:
@@ -342,7 +363,7 @@ class BilibiliNoteHelper:
                 })
                 poem_len += len(poem_line) + 1
 
-        if not main_obj and not poem_obj:
+        if not main_collection and not poem_obj:
             print('没有可用的笔记内容')
             return part_collection
 
@@ -356,7 +377,7 @@ class BilibiliNoteHelper:
             final_submit_len += op_len
 
         # 插入前言
-        if main_obj:
+        if main_collection:
             if preface:
                 final_submit_obj.append({
                     "insert": preface
@@ -377,7 +398,7 @@ class BilibiliNoteHelper:
                 final_submit_obj.append({ "insert": "\n" })
                 final_submit_len += len(preface) + 1
 
-        if main_obj and imgCover:
+        if main_collection and imgCover:
             # 插入封面图
             final_submit_obj.append({
                 "insert": {
@@ -399,25 +420,22 @@ class BilibiliNoteHelper:
         # 插入歌舞导航
         if songAndDance and song_dance_collection:
             for item in song_dance_collection:
-                song_dance_obj.append({
-                    "attributes": { "color": "#cccccc" },
-                    "insert": "┌ "
-                })
+                # song_dance_obj.append({
+                #     "attributes": { "color": "#cccccc" },
+                #     "insert": "┌ "
+                # })
                 for i, o in enumerate(item[1]):
                     song_dance_obj.append(o)
                     if i != len(item[1]) - 1:
                         song_dance_obj.append({
                             "attributes": { "color": "#cccccc" },
-                            "insert": " - "
+                            "insert": " "
                         })
                 song_dance_obj.append({
                     "attributes": { "color": "#cccccc" },
-                    "insert": " ┐"
+                    "insert": " ↙"
                 })
                 song_dance_obj.append({
-                    "attributes": {
-                        "align": "center"
-                    },
                     "insert": "\n"
                 })
                 song_dance_obj.extend(item[2])
@@ -426,8 +444,33 @@ class BilibiliNoteHelper:
             final_submit_len += song_dance_len
 
         # 插入主轴
-        final_submit_obj.extend(main_obj)
-        final_submit_len += main_len
+        # final_submit_obj.extend(main_obj)
+        # final_submit_len += main_len
+
+        if main_collection:
+            for item in main_collection:
+                # main_obj.append({
+                #     "attributes": { "color": "#cccccc" },
+                #     "insert": "┌ "
+                # })
+                for i, o in enumerate(item[1]):
+                    main_obj.append(o)
+                    if i != len(item[1]) - 1:
+                        main_obj.append({
+                            "attributes": { "color": "#cccccc" },
+                            "insert": " "
+                        })
+                main_obj.append({
+                    "attributes": { "color": "#cccccc" },
+                    "insert": " ↙"
+                })
+                main_obj.append({
+                    "insert": "\n"
+                })
+                main_obj.extend(item[2])
+                main_len += item[3]
+            final_submit_obj.extend(main_obj)
+            final_submit_len += main_len
 
         if output:
             # 将文本轴存储在文件中
