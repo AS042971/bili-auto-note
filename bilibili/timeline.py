@@ -84,6 +84,15 @@ class Timeline:
         sd_items = list(filter(lambda item: item.tag.startswith('🎤') or item.tag.startswith('💃'), self.items))
         return Timeline(sd_items)
 
+    def section(self) -> 'Timeline':
+        """生成仅含章节的时间轴（##开头的条目）
+
+        Returns:
+            Timeline: 仅含章节的时间轴
+        """
+        sd_items = list(filter(lambda item: item.tag.startswith('##')), self.items)
+        return Timeline(sd_items)
+
     def hasTitle(self) -> bool:
         """判断轴中是否包含章节标题（##开头的条目）
 

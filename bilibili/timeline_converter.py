@@ -19,7 +19,7 @@ class TimelineConverter:
         return video_info_res['title']
 
     @staticmethod
-    def getTitleJson(title: str, background="#fff359", small=False) -> Tuple[list, int]:
+    def getTitleJson(title: str, background="#fff359", small=False) -> Tuple[dict, list, int]:
         obj = []
         obj.append({ "insert": "\n" })
         size = "16px" if small else "18px"
@@ -51,10 +51,10 @@ class TimelineConverter:
             },
             "insert": "\n"
         })
-        return (obj, len(title) + 10)
+        return ({}, obj, len(title) + 10)
 
     @staticmethod
-    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
+    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[dict, list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -62,7 +62,7 @@ class TimelineConverter:
             info (VideoPartInfo): 视频信息
 
         Returns:
-                list: 对应的json对象
+            list: 对应的json对象
         """
         # 轴内容
         tagContent = item.tag
@@ -73,7 +73,7 @@ class TimelineConverter:
             desc = customTitle
             obj = []
             # 时间胶囊
-            obj.append({
+            time_label = {
                 "insert": {
                     "tag": {
                         "cid": info.cid,
@@ -88,13 +88,13 @@ class TimelineConverter:
                         "desc": desc
                     }
                 }
-            })
+            }
             obj.append({ "insert": "\n" })
             # 轴引导线
-            obj.append({
-                "attributes": { "color": "#cccccc" },
-                "insert": "  └─ "
-            })
+            # obj.append({
+            #     "attributes": { "color": "#cccccc" },
+            #     "insert": "└ "
+            # })
             contentType = ''
             if tagContent.endswith('**'):
                 tagContent = tagContent[:-2]
@@ -173,7 +173,7 @@ class TimelineConverter:
                 })
 
             obj.append({ "insert": "\n" })
-            return (obj, len(tagContent) + 8)
+            return (time_label, obj, len(tagContent) + 8)
 
     @staticmethod
     async def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
@@ -190,7 +190,8 @@ class TimelineConverter:
         content_len = 0
         # 内容
         for item in timeline.items:
-            (item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            obj.append(time_obj)
             obj.extend(item_obj)
             content_len += item_len
         content_len += 1
@@ -209,8 +210,8 @@ class TimelineConverter:
         """
         results = []
         for item in timeline.items:
-            (item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
-            results.append([item.tag, item_obj, item_len])
+            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            results.append([item.tag, [time_obj], item_obj, item_len])
         return results
 
     @staticmethod

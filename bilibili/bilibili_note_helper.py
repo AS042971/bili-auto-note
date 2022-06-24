@@ -168,7 +168,7 @@ class BilibiliNoteHelper:
         txt_timeline = ''
 
         if songAndDance:
-            (song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
+            (_, song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
 
@@ -294,7 +294,7 @@ class BilibiliNoteHelper:
 
             # 添加分p标题和内容
             background = "#73fdea" if is_video_part_danmaku else "#fff359"
-            (title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
+            (_, title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
             main_obj.extend(title_obj)
             main_len += title_len
             (timeline_obj, timeline_len) = await TimelineConverter.getTimelineJson(part_timeline, video_part)
@@ -305,7 +305,7 @@ class BilibiliNoteHelper:
             if songAndDance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
-                    custom_title = ' (弹幕版)' if is_video_part_danmaku else ' (纯净版)'
+                    custom_title = '弹' if is_video_part_danmaku else '纯'
                     part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
@@ -315,8 +315,8 @@ class BilibiliNoteHelper:
                             # 合并同名项目
                             for ref in song_dance_collection:
                                 if item[0] == ref[0]:
-                                    ref[1].insert(1, item[1][0])
-                                    ref[2] += 1
+                                    ref[1].extend(item[1])
+                                    ref[3] += 1
                                     found = True
                                     break
                             if not found:
@@ -326,7 +326,7 @@ class BilibiliNoteHelper:
         poem_obj = []
         poem_len = 0
         if poem:
-            (poem_title_obj, poem_title_len) = TimelineConverter.getTitleJson('定场诗', background="#f8ba00")
+            (_, poem_title_obj, poem_title_len) = TimelineConverter.getTitleJson('定场诗', background="#f8ba00")
             poem_obj.extend(poem_title_obj)
             poem_len += poem_title_len
             poem_lines = poem.split('\n')
@@ -399,8 +399,10 @@ class BilibiliNoteHelper:
         # 插入歌舞导航
         if songAndDance and song_dance_collection:
             for item in song_dance_collection:
+                song_dance_obj.append({"insert": "🔻 "})
                 song_dance_obj.extend(item[1])
-                song_dance_len += item[2]
+                song_dance_obj.extend(item[2])
+                song_dance_len += item[3]
             final_submit_obj.extend(song_dance_obj)
             final_submit_len += song_dance_len
 
