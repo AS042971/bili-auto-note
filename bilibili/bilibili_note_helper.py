@@ -305,8 +305,8 @@ class BilibiliNoteHelper:
             # main_len += timeline_len
 
             if len(part_timeline.items) != 0:
-                custom_title = '弹' if is_video_part_danmaku else '纯'
-                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle='')
+                custom_title = '弹' if is_video_part_danmaku else ''
+                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title)
                 if not main_collection:
                     main_collection = part_result
                 else:
@@ -326,8 +326,8 @@ class BilibiliNoteHelper:
             if songAndDance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
-                    custom_title = '弹' if is_video_part_danmaku else '纯'
-                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle='')
+                    custom_title = '弹' if is_video_part_danmaku else ''
+                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
                     else:
@@ -433,7 +433,7 @@ class BilibiliNoteHelper:
                         })
                 song_dance_obj.append({
                     "attributes": { "color": "#cccccc" },
-                    "insert": " ↙"
+                    "insert": " ⇙"
                 })
                 song_dance_obj.append({
                     "insert": "\n"
@@ -453,20 +453,21 @@ class BilibiliNoteHelper:
                 #     "attributes": { "color": "#cccccc" },
                 #     "insert": "┌ "
                 # })
-                for i, o in enumerate(item[1]):
-                    main_obj.append(o)
-                    if i != len(item[1]) - 1:
-                        main_obj.append({
-                            "attributes": { "color": "#cccccc" },
-                            "insert": " "
-                        })
-                main_obj.append({
-                    "attributes": { "color": "#cccccc" },
-                    "insert": " ↙"
-                })
-                main_obj.append({
-                    "insert": "\n"
-                })
+                if item[1][0]:
+                    for i, o in enumerate(item[1]):
+                        main_obj.append(o)
+                        if i != len(item[1]) - 1:
+                            main_obj.append({
+                                "attributes": { "color": "#cccccc" },
+                                "insert": " "
+                            })
+                    main_obj.append({
+                        "attributes": { "color": "#cccccc" },
+                        "insert": " ⇙"
+                    })
+                    main_obj.append({
+                        "insert": "\n"
+                    })
                 main_obj.extend(item[2])
                 main_len += item[3]
             final_submit_obj.extend(main_obj)
