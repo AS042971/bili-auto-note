@@ -89,7 +89,7 @@ class TimelineConverter:
                     }
                 }
             }
-            obj.append({ "insert": "\n" })
+            # obj.append({ "insert": "\n" })
             # 轴引导线
             # obj.append({
             #     "attributes": { "color": "#cccccc" },

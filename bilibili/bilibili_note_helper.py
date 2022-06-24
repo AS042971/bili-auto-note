@@ -399,8 +399,27 @@ class BilibiliNoteHelper:
         # 插入歌舞导航
         if songAndDance and song_dance_collection:
             for item in song_dance_collection:
-                song_dance_obj.append({"insert": "🔻 "})
-                song_dance_obj.extend(item[1])
+                song_dance_obj.append({
+                    "attributes": { "color": "#cccccc" },
+                    "insert": "┌ "
+                })
+                for i, o in enumerate(item[1]):
+                    song_dance_obj.append(o)
+                    if i != len(item[1]) - 1:
+                        song_dance_obj.append({
+                            "attributes": { "color": "#cccccc" },
+                            "insert": " - "
+                        })
+                song_dance_obj.append({
+                    "attributes": { "color": "#cccccc" },
+                    "insert": " ┐"
+                })
+                song_dance_obj.append({
+                    "attributes": {
+                        "align": "center"
+                    },
+                    "insert": "\n"
+                })
                 song_dance_obj.extend(item[2])
                 song_dance_len += item[3]
             final_submit_obj.extend(song_dance_obj)
