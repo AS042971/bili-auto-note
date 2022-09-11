@@ -540,7 +540,8 @@ class BilibiliNoteHelper:
             "cont_len": max(final_submit_len, 301),
             "hash": str(round(time.time()*1000)),
             "publish": 1 if publish else 0,
-            "auto_comment": 1 if (publish and autoComment) else 0
+            "auto_comment": 1 if (publish and autoComment) else 0,
+            "comment_format": 2
         }
         await asyncio.sleep(1)
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)
