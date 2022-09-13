@@ -121,6 +121,15 @@
       "description": "笔记封面照片",
       "type": "string",
       "maxLength": 1024
+    },
+    "imgFooter": {
+      "description": "笔记末尾照片",
+      "type": "array",
+      "items": {
+        "description": "图片URL",
+        "type": "string"
+      },
+      "uniqueItems": true
     }
   },
   "required": [

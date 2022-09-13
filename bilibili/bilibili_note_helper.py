@@ -66,6 +66,7 @@ class BilibiliNoteHelper:
             jumpOP = False,
             imgNone = '',
             imgCover = '',
+            imgFooter: List[str] = [],
             customVideoInfo = ''
         ) -> List[str]:
         """发送笔记
@@ -404,10 +405,11 @@ class BilibiliNoteHelper:
             final_submit_obj.append({
                 "insert": {
                     "imageUpload": {
-                    "url": imgCover,
-                    "status": "done",
-                    "width": 315,
-                    "id": "IMAGE_" + str(round(time.time()*1000))
+                        "url": imgCover,
+                        "status": "done",
+                        "width": 315,
+                        "id": "IMAGE_" + str(round(time.time()*1000)),
+                        "source": "video"
                     }
                 }
             })
@@ -489,6 +491,24 @@ class BilibiliNoteHelper:
             final_submit_obj.extend(main_obj)
             final_submit_len += main_len
 
+        if imgFooter:
+            (_, footer_title_obj, footer_title_len) = TimelineConverter.getTitleJson('附图', background="#f8ba00")
+            final_submit_obj.extend(footer_title_obj)
+            final_submit_len += footer_title_len
+            for imgFooterItem in imgFooter:
+                final_submit_obj.append({
+                    "insert": {
+                        "imageUpload": {
+                            "url": imgFooterItem,
+                            "status": "done",
+                            "width": 315,
+                            "id": "IMAGE_" + str(round(time.time()*1000)),
+                            "source": "video"
+                        }
+                    }
+                })
+                final_submit_obj.append({ "insert": "\n" })
+
         if output:
             # 将文本轴存储在文件中
             try:
@@ -502,11 +522,12 @@ class BilibiliNoteHelper:
             # 插入羊驼滑跪图
             final_submit_obj.append({
                 "insert": {
-                    "imageUpload": {
-                    "url": imgNone,
-                    "status": "done",
-                    "width": 315,
-                    "id": "IMAGE_" + str(round(time.time()*1000))
+                        "imageUpload": {
+                        "url": imgNone,
+                        "status": "done",
+                        "width": 315,
+                        "id": "IMAGE_" + str(round(time.time()*1000)),
+                        "source": "video"
                     }
                 }
             })

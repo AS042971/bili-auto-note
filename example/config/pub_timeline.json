@@ -19,5 +19,6 @@
     "watch": false,
     "confirm": true,
     "imgNone": "//api.bilibili.com/x/note/image?image_id=124497",
-    "imgCover": "//api.bilibili.com/x/note/image?image_id=124497"
+    "imgCover": "//api.bilibili.com/x/note/image?image_id=124497",
+    "imgFooter": ["//api.bilibili.com/x/note/image?image_id=124497", "//api.bilibili.com/x/note/image?image_id=124497"]
 }
