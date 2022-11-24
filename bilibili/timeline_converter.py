@@ -200,7 +200,7 @@ class TimelineConverter:
                     elif contentType == 'dance':
                         obj.append({
                             "attributes": {
-                                "color": "#1DB100",
+                                "color": "#017001",
                             },
                             "insert": part
                         })
@@ -256,7 +256,7 @@ class TimelineConverter:
         results = []
         for item in timeline.items:
             (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
-            results.append([item.tag, [time_obj], item_obj, item_len, [info.title]])
+            results.append([item.key, [time_obj], item_obj, item_len, [info.title]])
         return results
 
     @staticmethod

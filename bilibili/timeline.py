@@ -3,7 +3,7 @@ from typing import Iterator, List
 
 class TimelineItem:
     def __init__(self,
-                 sec: int, tag: str) -> None:
+                 sec: int, tag: str, key = None) -> None:
         """时间轴条目
 
         Args:
@@ -12,6 +12,10 @@ class TimelineItem:
         """
         self.sec = sec
         self.tag = tag.strip()
+        if key:
+            self.key = key
+        else:
+            self.key = f'{self.sec}_{self.tag}'
 
     def shift(self, delta: int) -> 'TimelineItem':
         """生成调整后的时间轴条目
@@ -22,7 +26,7 @@ class TimelineItem:
         Returns:
             TimelineItem: 新生成的时间轴条目
         """
-        return TimelineItem(self.sec + delta, self.tag)
+        return TimelineItem(self.sec + delta, self.tag, self.key)
 
     def __str__(self) -> str:
         m, s = divmod(self.sec, 60)

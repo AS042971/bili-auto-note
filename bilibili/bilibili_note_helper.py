@@ -138,6 +138,8 @@ class BilibiliNoteHelper:
                 print(f'  自动发布的评论内容: \n{cover}')
             if output:
                 print(f'  更新笔记时文本轴将同步保存于 {output}')
+            for i in range(min(3, len(timeline.items))):
+                print(f'笔记的第{i+1}行：{timeline.items[i].tag}')
 
         if len(offsets) + len(danmakuOffsets) != len(video_info.parts):
             print(f'  注意: 偏移量{offsets}, {danmakuOffsets} 总数量和视频分段数量({len(video_info.parts)})不一致！')
@@ -156,6 +158,9 @@ class BilibiliNoteHelper:
         first_part = True
         first_danmaku_part = True
 
+        article_tag_obj = []
+        article_tag_len = 0
+
         op_obj = []
         op_len = 0
 
@@ -169,16 +174,38 @@ class BilibiliNoteHelper:
 
         txt_timeline = ''
 
+        # 生成跳转
+        article_tag_obj.append({
+            "attributes": {
+                "color": "#cccccc"
+            },
+            "insert": '如果您从专栏进入，请'
+        })
+        article_tag_obj.append({
+            "attributes": {
+                "color": "#89d4ff",
+                "link": f'https://www.bilibili.com/video/{bvid}'
+            },
+            "insert": ' 点这里 '
+        })
+        article_tag_obj.append({
+            "attributes": {
+                "color": "#cccccc"
+            },
+            "insert": '跳至原视频'
+        })
+        article_tag_obj.append({
+            "insert": '\n'
+        })
+        article_tag_len = 4
+
+        # 生成歌舞导航容器
         if songAndDance:
             (_, song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
 
-        # (_, main_title_obj, main_title_len) = TimelineConverter.getTitleJson('正片', background="#fff359")
-        # main_obj.extend(main_title_obj)
-        # main_len += main_title_len
-
-        # 插入每个分P的轴
+        # 生成每个分P的轴
         for video_part in video_info.parts:
             # 自动忽略过短的视频（一般是用来垫的视频，不会对应到offsets序列）
             if video_part.duration < ignoreThreshold:
@@ -345,7 +372,7 @@ class BilibiliNoteHelper:
                             if not found:
                                 song_dance_collection.append(item)
 
-        # 插入诗歌
+        # 生成诗歌对象
         poem_obj = []
         poem_len = 0
         if poem:
@@ -372,6 +399,10 @@ class BilibiliNoteHelper:
         # 合成
         final_submit_obj = []
         final_submit_len = 0
+
+        # 插入原视频跳转
+        final_submit_obj.extend(article_tag_obj)
+        final_submit_len += article_tag_len
 
         # 插入OP跳转
         if op_obj:
@@ -567,7 +598,7 @@ class BilibiliNoteHelper:
         await asyncio.sleep(1)
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)
         if submit_res['note_id']:
-            print(f'执行成功，笔记ID为：{submit_res["note_id"]}')
+            print(f'执行成功，笔记ID为：{submit_res}')
             return part_collection
         else:
             print(f'执行失败，返回值为{submit_res}')
