@@ -67,7 +67,8 @@ class BilibiliNoteHelper:
             imgNone = '',
             imgCover = '',
             imgFooter: List[str] = [],
-            customVideoInfo = ''
+            customVideoInfo = '',
+            score= False
         ) -> List[str]:
         """发送笔记
 
@@ -403,6 +404,36 @@ class BilibiliNoteHelper:
         # 插入原视频跳转
         final_submit_obj.extend(article_tag_obj)
         final_submit_len += article_tag_len
+
+        # 插入评分跳转
+        if score:
+            final_submit_obj.append({
+                "insert": {
+                    "tag": {
+                        "cid": video_info.parts[0].cid,
+                        "oid_type": 0,
+                        "status": 0,
+                        "index": 1,
+                        "seconds": 0,
+                        "cidCount": len(video_info.parts),
+                        "key": str(round(time.time()*1000)),
+                        "title": "",
+                        "epid": 0,
+                        "desc": "点此评分"
+                    }
+                }
+            })
+            final_submit_obj.append({
+                "attributes": {
+                    "color": "#0b84ed",
+                    "link": "https://t.bilibili.com/735845425474437172"
+                },
+                "insert": " 评分说明"
+            })
+            final_submit_obj.append({
+                "insert": "\n"
+            })
+            final_submit_len += 3
 
         # 插入OP跳转
         if op_obj:
