@@ -4,21 +4,27 @@
     "bvid": "BV15U4y1d7TX",
     "customVideoInfo": "",
     "timeline": "./data/timeline.csv",
-    "offsets": [-52, "auto"],
-    "danmakuOffsets": [-52, "auto"],
+    "tokens": [
+        {
+            "key": "弹幕",
+            "offsets": [-52, "auto"],
+            "marker": "弹",
+            "jumpOpDesc": "🪂点此跳过OP (弹幕版)"
+        },
+        {
+            "offsets": [-52, "auto"],
+            "jumpOpDesc": "🪂点此跳过OP (纯净版)"
+        }
+    ],
     "ignoreThreshold": 600,
-    "output": "./data/output.txt",
     "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
     "preface": "【注意】今天也要开开心心地看录播。可点击上方按钮快速跳过OP。",
-    "prefaceNone": "【注意】今天也要开开心心地看录播。当前时间轴正在制作或审核中，请小伙伴们耐心等待。审核通过后会在置顶评论区回复内通知。小伙伴们可以先点击上方按钮跳过OP，或读一读下方的定场诗",
     "jumpOP": true,
-    "poem": "./data/poem.txt",
     "songAndDanceAbstract": true,
     "publish": false,
     "autoComment": true,
     "watch": false,
     "confirm": true,
-    "imgNone": "//api.bilibili.com/x/note/image?image_id=124497",
     "imgCover": "//api.bilibili.com/x/note/image?image_id=124497",
-    "imgFooter": ["//api.bilibili.com/x/note/image?image_id=124497", "//api.bilibili.com/x/note/image?image_id=124497"]
+    "imgFooter": ["//api.bilibili.com/x/note/image?image_id=124497"]
 }

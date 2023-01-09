@@ -18,44 +18,45 @@
       "description": "时间轴文件路径",
       "type": "string"
     },
-    "offsets": {
-      "description": "目标视频每个分P的开始时刻对应的统一时间轴时刻",
+    "tokens":{
+      "description": "用于识别不同分P的类型",
       "type": "array",
       "items": {
-        "anyOf":[
-          {
-            "description": "分P开始时刻",
-            "type": "integer"
+        "description": "分P类型的配置信息",
+        "properties": {
+          "key": {
+            "description": "用于推断分P归属的标识符。将自上而下进行匹配，没有填写key的条目将作为默认值终止后续的匹配过程",
+            "type": "string"
           },
-          {
-            "description": "根据上一P开始时刻和时长自动推断分P开始时刻",
-            "const": "auto"
+          "offsets": {
+            "description": "目标视频每个分P的开始时刻对应的统一时间轴时刻",
+            "type": "array",
+            "items": {
+              "anyOf":[
+                {
+                  "description": "分P开始时刻",
+                  "type": "integer"
+                },
+                {
+                  "description": "根据上一P开始时刻和时长自动推断分P开始时刻",
+                  "const": "auto"
+                },
+                {
+                  "description": "跳过这个分P",
+                  "const": "skip"
+                }
+              ]
+            }
           },
-          {
-            "description": "跳过这个分P",
-            "const": "skip"
+          "marker": {
+            "description": "显示在时间胶囊中的跳转标签",
+            "type": "string"
+          },
+          "jumpOpDesc": {
+            "description": "跳过OP按钮的说明",
+            "type": "string"
           }
-        ]
-      }
-    },
-    "danmakuOffsets": {
-      "description": "目标视频每个弹幕版分P的开始时刻对应的统一时间轴时刻",
-      "type": "array",
-      "items": {
-        "anyOf":[
-          {
-            "description": "分P开始时刻",
-            "type": "integer"
-          },
-          {
-            "description": "根据上一P开始时刻和时长自动推断分P开始时刻",
-            "const": "auto"
-          },
-          {
-            "description": "跳过这个分P",
-            "const": "skip"
-          }
-        ]
+        }
       }
     },
     "ignoreThreshold": {
@@ -63,10 +64,6 @@
       "type": "integer",
       "default": 600,
       "minimum": 0
-    },
-    "output": {
-      "description": "文本轴输出路径",
-      "type": "string"
     },
     "cover": {
       "description": "视频转制通过时发送至评论区的文案",
@@ -79,18 +76,9 @@
       "type": "string",
       "maxLength": 1024
     },
-    "prefaceNone": {
-      "description": "没有正式发布笔记时，笔记轴开头的文本",
-      "type": "string",
-      "maxLength": 1024
-    },
     "jumpOP": {
       "description": "是否生成跳过op的按钮",
       "type": "boolean"
-    },
-    "poem": {
-      "description": "诗歌文件路径",
-      "type": "string"
     },
     "songAndDanceAbstract": {
       "description": "是否生成歌舞摘要",
@@ -112,11 +100,6 @@
       "description": "发布前是否确认",
       "type": "boolean"
     },
-    "imgNode": {
-      "description": "没有笔记的时候填充的图片",
-      "type": "string",
-      "maxLength": 1024
-    },
     "imgCover": {
       "description": "笔记封面照片",
       "type": "string",
@@ -136,8 +119,8 @@
     "cookie",
     "bvid",
     "timeline",
-    "offsets",
     "cover",
-    "publish"
+    "publish",
+    "tokens"
   ]
 }

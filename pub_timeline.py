@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from enum import auto
-from bilibili import BilibiliAgent, BilibiliNoteHelper, TimelineConverter
+from bilibili import BilibiliAgent, BilibiliNoteHelper, TimelineConverter, PubTimelineConfig
 import asyncio
 import sys
 import json
@@ -13,104 +13,15 @@ async def main(config_path: str):
 
         # 基础信息
         agent = BilibiliAgent(json_data['cookie'])
-        bvid = json_data['bvid']
-
-        if 'customVideoInfo' in json_data:
-            custom_video_info = json_data['customVideoInfo']
-        else:
-            custom_video_info = ''
-
-        # 读取偏移量的信息
-        offsets = json_data['offsets']
-        if 'danmakuOffsets' in json_data:
-            danmaku_offsets = json_data['danmakuOffsets']
-        else:
-            danmaku_offsets = []
-
-        if 'ignoreThreshold' in json_data:
-            ignore_threshold = json_data['ignoreThreshold']
-        else:
-            ignore_threshold = 600
-
-        # 读取是否发布的信息
-        publish = json_data['publish']
-        cover = json_data['cover']
-
-        # 读取是否监控的信息
-        if 'watch' in json_data:
-            watch = json_data['watch']
-        else:
-            print(f'可更新配置文件 {config_path} 增加"watch"字段，用于自动监控视频分P和笔记文件的变化，可参考example目录中的示例')
-            watch = False
-
-        # 读取文本轴存储
-        if 'output' in json_data:
-            output = json_data['output']
-        else:
-            output = ''
-
+        config = PubTimelineConfig(json_data)
         # 读取其他选项
-        if 'preface' in json_data:
-            preface = json_data['preface']
-        else:
-            preface = ''
-
-        if 'songAndDanceAbstract' in json_data:
-            song_and_dance = json_data['songAndDanceAbstract']
-        else:
-            song_and_dance = True
-
-        if 'prefaceNone' in json_data:
-            prefaceNone = json_data['prefaceNone']
-        else:
-            prefaceNone = ''
-
-        if 'jumpOP' in json_data:
-            jumpOP = json_data['jumpOP']
-        else:
-            jumpOP = False
-
-        if 'poem' in json_data:
-            poem_path = json_data['poem']
-            with open(poem_path, 'r', encoding='utf8') as file:
-                poem = file.read()
-        else:
-            poem = ''
-
-        if 'confirm' in json_data:
-            confirm = json_data['confirm']
-        else:
-            confirm = True
-
-        if 'imgNone' in json_data:
-            img_none = json_data['imgNone']
-        else:
-            img_none = False
-
-        if 'imgCover' in json_data:
-            img_cover = json_data['imgCover']
-        else:
-            img_cover = False
-
-        if 'autoComment' in json_data:
-            auto_comment = json_data['autoComment']
-        else:
-            auto_comment = True
-
-        if 'score' in json_data:
-            score = json_data['score']
-        else:
-            score = False
-
-        if 'imgFooter' in json_data:
-            img_footer = json_data['imgFooter']
-        else:
-            img_footer = []
+        watch: bool = json_data['watch'] if 'watch' in json_data else False
+        confirm: bool = json_data['confirm'] if 'confirm' in json_data else True
 
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
 
-            await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, confirmed=not confirm, imgNone=img_none, imgCover=img_cover, imgFooter=img_footer, autoComment=auto_comment, customVideoInfo=custom_video_info, score=score)
+            await BilibiliNoteHelper.sendNote(timeline, agent, config, confirmed=not confirm)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -131,11 +42,11 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=not confirm, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, imgCover=img_cover, imgFooter=img_footer, autoComment=auto_comment, customVideoInfo=custom_video_info, score=score)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, config ,confirmed= not confirm)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, bvid, offsets, cover, publish, confirmed=True, previousPartCollection = published_parts, danmakuOffsets=danmaku_offsets, ignoreThreshold=ignore_threshold, autoComment=False, output=output, preface=preface, songAndDance=song_and_dance, prefaceNone=prefaceNone, jumpOP=jumpOP, poem=poem, imgNone=img_none, imgCover=img_cover, imgFooter=img_footer,customVideoInfo=custom_video_info, score=score)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, config, confirmed=True, previousPartCollection=published_parts)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts

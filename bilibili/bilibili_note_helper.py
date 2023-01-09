@@ -4,7 +4,6 @@ import json
 import csv
 import asyncio
 import random
-from urllib.parse import urlencode
 
 from typing import Tuple, List
 
@@ -12,6 +11,13 @@ from .timeline import Timeline, TimelineItem
 from .video import VideoInfo, VideoPartInfo
 from .agent import BilibiliAgent
 from .timeline_converter import TimelineConverter
+from .pub_timeline_config import PubTimelineConfig
+
+class TokenInfo:
+    def __init__(self) -> None:
+        self.current_timestamp = 0
+        self.video_part_index = 0
+        self.first_part = True
 
 class BilibiliNoteHelper:
     @staticmethod
@@ -51,40 +57,18 @@ class BilibiliNoteHelper:
     @staticmethod
     async def sendNote(
             timeline: Timeline, agent: BilibiliAgent,
-            bvid: str, offsets: List[int],
-            cover: str, publish: bool,
+            config: PubTimelineConfig,
             confirmed: bool = False,
-            previousPartCollection: List[str] = [],
-            ignoreThreshold: int = 600,
-            danmakuOffsets: List[int] = [],
-            autoComment: bool = True,
-            output: str = '',
-            songAndDance = True,
-            preface = '',
-            prefaceNone = '',
-            poem = '',
-            jumpOP = False,
-            imgNone = '',
-            imgCover = '',
-            imgFooter: List[str] = [],
-            customVideoInfo = '',
-            score= False
+            previousPartCollection: List[str] = []
         ) -> List[str]:
         """发送笔记
 
         Args:
             timeline (Timeline): 参考时间轴
             agent (BilibiliAgent): 用于发送的账号
-            bvid (str): 目标视频BV号
-            offsets (list[int]): 每个分P的开场偏移
-            cover (str): 发送到评论区的字符串
-            publish (bool): 是否直接发布
+            config (PubTimelineConfig): 其他配置信息
             confirmed (bool): 发布前是否不用二次确认, 默认为False
             previousPartCollection (list[int]): 前一次发布的视频分P信息, 默认为空
-            ignoreThreshold (int): 时间短于此值的分P将被忽略（秒）, 默认为10分钟
-            danmakuOffsets(list[int]): 弹幕版每个分P的开场偏移
-            output(str): 输出文本轴路径
-
         Returns:
             List[str]: 如果发布成功，返回新的视频分P信息
         """
@@ -92,10 +76,10 @@ class BilibiliNoteHelper:
         video_info_res = await agent.get(
             "https://api.bilibili.com/x/web-interface/view",
             params={
-                "bvid": bvid
+                "bvid": config.bvid
             })
-        if customVideoInfo:
-            with open(customVideoInfo, 'r', encoding='utf8') as fp:
+        if config.custom_video_info:
+            with open(config.custom_video_info, 'r', encoding='utf8') as fp:
                 json_data = json.load(fp)
                 if json_data:
                     video_info_res['pages'] = json_data
@@ -134,16 +118,11 @@ class BilibiliNoteHelper:
         if not confirmed:
             print('请确认以下信息是否准确（自动监控模式下本提示只会出现一次）')
             print(f'  视频名: {video_info.title}')
-            print('  配置: '+('笔记会自动发布' if publish else '笔记不会自动发布, 请在脚本执行完毕后进入视频笔记区手动发布'))
-            if publish:
-                print(f'  自动发布的评论内容: \n{cover}')
-            if output:
-                print(f'  更新笔记时文本轴将同步保存于 {output}')
+            print('  配置: '+('笔记会自动发布' if config.publish else '笔记不会自动发布, 请在脚本执行完毕后进入视频笔记区手动发布'))
+            if config.publish:
+                print(f'  自动发布的评论内容: \n{config.cover}')
             for i in range(min(3, len(timeline.items))):
                 print(f'笔记的第{i+1}行：{timeline.items[i].tag}')
-
-        if len(offsets) + len(danmakuOffsets) != len(video_info.parts):
-            print(f'  注意: 偏移量{offsets}, {danmakuOffsets} 总数量和视频分段数量({len(video_info.parts)})不一致！')
 
         if not confirmed:
             command = input('请确认以上信息准确。是否执行？[y/n]')
@@ -151,16 +130,7 @@ class BilibiliNoteHelper:
                 return []
 
         # 开始生成笔记
-        current_timestamp = 0
-        current_danmaku_timestamp = 0
-        video_part_index = 0
-        video_part_danmaku_index = 0
-
-        first_part = True
-        first_danmaku_part = True
-
-        article_tag_obj = []
-        article_tag_len = 0
+        token_info = [TokenInfo() for _ in range(len(config.tokens))]
 
         op_obj = []
         op_len = 0
@@ -173,35 +143,8 @@ class BilibiliNoteHelper:
         song_dance_len = 0
         song_dance_collection = []
 
-        txt_timeline = ''
-
-        # 生成跳转
-        article_tag_obj.append({
-            "attributes": {
-                "color": "#cccccc"
-            },
-            "insert": '如果您从专栏进入，请'
-        })
-        article_tag_obj.append({
-            "attributes": {
-                "color": "#89d4ff",
-                "link": f'https://www.bilibili.com/video/{bvid}'
-            },
-            "insert": ' 点这里 '
-        })
-        article_tag_obj.append({
-            "attributes": {
-                "color": "#cccccc"
-            },
-            "insert": '跳至原视频'
-        })
-        article_tag_obj.append({
-            "insert": '\n'
-        })
-        article_tag_len = 4
-
         # 生成歌舞导航容器
-        if songAndDance:
+        if config.song_and_dance:
             (_, song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
             song_dance_obj.extend(song_dance_title_obj)
             song_dance_len += song_dance_title_len
@@ -209,71 +152,37 @@ class BilibiliNoteHelper:
         # 生成每个分P的轴
         for video_part in video_info.parts:
             # 自动忽略过短的视频（一般是用来垫的视频，不会对应到offsets序列）
-            if video_part.duration < ignoreThreshold:
+            if video_part.duration < config.ignore_threshold:
                 continue
 
-            is_video_part_danmaku = '弹幕' in video_part.title and '无弹幕' not in video_part.title
+            # 检查这个视频归属于哪个token
+            video_part_token = -1
+            for i, token in enumerate(config.tokens):
+                if not token.key or token.key in video_part.title:
+                    video_part_token = i
+                    break
+            if video_part_token == -1:
+                print(f'{video_part.title}不归属于任何token，请确认配置')
+                continue
 
             # 读取分p对应的偏移量信息
             offset = 0
-            if not danmakuOffsets:
-                # 所有分P统一由offsets管理
-                if len(offsets) == 0 or video_part_index >= len(offsets):
-                    raw_offset = 'auto'
-                else:
-                    raw_offset = offsets[video_part_index]
-                video_part_index += 1
-                if isinstance(raw_offset, int):
-                    offset = raw_offset
-                    current_timestamp = offset + video_part.duration
-                elif raw_offset == 'auto':
-                    offset = current_timestamp
-                    current_timestamp = offset + video_part.duration
-                else:
-                    continue
+            if len(config.tokens[video_part_token].offsets) == 0 or token_info[video_part_token].video_part_index >= len(config.tokens[video_part_token].offsets):
+                raw_offset = 'auto'
             else:
-                # 分P分别由offsets和danmakuOffsets决定
-                if is_video_part_danmaku:
-                    # 这是一个弹幕视频
-                    if video_part_danmaku_index == 0 and ('中' in video_part.title or '下' in video_part.title):
-                        video_part_danmaku_index = 1
-                        current_danmaku_timestamp = current_timestamp
-                        first_danmaku_part = False
-                    if len(danmakuOffsets) == 0 or video_part_danmaku_index >= len(danmakuOffsets):
-                        raw_offset = 'auto'
-                    else:
-                        raw_offset = danmakuOffsets[video_part_danmaku_index]
-                    video_part_danmaku_index += 1
-                    if isinstance(raw_offset, int):
-                        offset = raw_offset
-                        current_danmaku_timestamp = offset + video_part.duration
-                    elif raw_offset == 'auto':
-                        offset = current_danmaku_timestamp
-                        current_danmaku_timestamp = offset + video_part.duration
-                    else:
-                        continue
-                else:
-                    # 这是一个无弹幕视频
-                    if video_part_index == 0 and ('中' in video_part.title or '下' in video_part.title):
-                        video_part_index = 1
-                        current_timestamp = current_danmaku_timestamp
-                        first_part = False
-                    if len(offsets) == 0 or video_part_index >= len(offsets):
-                        raw_offset = 'auto'
-                    else:
-                        raw_offset = offsets[video_part_index]
-                    video_part_index += 1
-                    if isinstance(raw_offset, int):
-                        offset = raw_offset
-                        current_timestamp = offset + video_part.duration
-                    elif raw_offset == 'auto':
-                        offset = current_timestamp
-                        current_timestamp = offset + video_part.duration
-                    else:
-                        continue
+                raw_offset = config.tokens[video_part_token].offsets[token_info[video_part_token].video_part_index]
+            token_info[video_part_token].video_part_index += 1
+            if isinstance(raw_offset, int):
+                offset = raw_offset
+                token_info[video_part_token].current_timestamp = offset + video_part.duration
+            elif raw_offset == 'auto':
+                offset = token_info[video_part_token].current_timestamp
+                token_info[video_part_token].current_timestamp = offset + video_part.duration
+            else:
+                continue
 
-            if jumpOP and not is_video_part_danmaku and first_part:
-                first_part = False
+            if config.jumpOP and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
+                token_info[video_part_token].first_part = False
                 op_obj.append({
                     "insert": {
                         "tag": {
@@ -284,27 +193,7 @@ class BilibiliNoteHelper:
                             "seconds": -offset,
                             "cidCount": video_part.cidCount,
                             "key": str(round(time.time()*1000)),
-                            "desc": "🪂点此跳过OP (纯净版)",
-                            "title": "",
-                            "epid": 0
-                        }
-                    }
-                })
-                op_obj.append({ "insert": "\n" })
-                op_len += 2
-            if jumpOP and is_video_part_danmaku and first_danmaku_part:
-                first_danmaku_part = False
-                op_obj.append({
-                    "insert": {
-                        "tag": {
-                            "cid": video_part.cid,
-                            "oid_type": 0,
-                            "status": 0,
-                            "index": video_part.index,
-                            "seconds": -offset,
-                            "cidCount": video_part.cidCount,
-                            "key": str(round(time.time()*1000)),
-                            "desc": "🪂点此跳过OP (弹幕版)",
+                            "desc": config.tokens[video_part_token].jump_op_desc,
                             "title": "",
                             "epid": 0
                         }
@@ -316,25 +205,11 @@ class BilibiliNoteHelper:
             # 从原始时间轴中切出分p时间轴
             part_timeline = timeline.clip(offset, video_part.duration)
             if len(part_timeline.items) == 0:
+                print(f'分P{video_part.title}不具有任何时间轴条目')
                 continue
 
-            # 将分p时间轴保存到文本文件
-            txt_timeline += (video_part.title)
-            txt_timeline += '\n'
-            txt_timeline += str(part_timeline)
-            txt_timeline += '\n\n'
-
-            # 添加分p标题和内容
-            # background = "#73fdea" if is_video_part_danmaku else "#fff359"
-            # (_, title_obj, title_len) = TimelineConverter.getTitleJson(video_part.title, background=background)
-            # main_obj.extend(title_obj)
-            # main_len += title_len
-            # (timeline_obj, timeline_len) = await TimelineConverter.getTimelineJson(part_timeline, video_part)
-            # main_obj.extend(timeline_obj)
-            # main_len += timeline_len
-
             if len(part_timeline.items) != 0:
-                custom_title = '弹' if is_video_part_danmaku else ''
+                custom_title = config.tokens[video_part_token].marker
                 part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title)
                 if not main_collection:
                     main_collection = part_result
@@ -353,10 +228,10 @@ class BilibiliNoteHelper:
                             main_collection.append(item)
 
             # 筛选分p的歌舞成分
-            if songAndDance:
+            if config.song_and_dance:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
-                    custom_title = '弹' if is_video_part_danmaku else ''
+                    custom_title = config.tokens[video_part_token].marker
                     part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
                     if not song_dance_collection:
                         song_dance_collection = part_result
@@ -373,27 +248,7 @@ class BilibiliNoteHelper:
                             if not found:
                                 song_dance_collection.append(item)
 
-        # 生成诗歌对象
-        poem_obj = []
-        poem_len = 0
-        if poem:
-            (_, poem_title_obj, poem_title_len) = TimelineConverter.getTitleJson('定场诗', background="#f8ba00")
-            poem_obj.extend(poem_title_obj)
-            poem_len += poem_title_len
-            poem_lines = poem.split('\n')
-            for poem_line in poem_lines:
-                poem_obj.append({
-                    "insert": poem_line
-                })
-                poem_obj.append({
-                    "attributes": {
-                        "align": "center"
-                    },
-                    "insert": '\n'
-                })
-                poem_len += len(poem_line) + 1
-
-        if not main_collection and not poem_obj:
+        if not main_collection:
             print('没有可用的笔记内容')
             return part_collection
 
@@ -401,73 +256,25 @@ class BilibiliNoteHelper:
         final_submit_obj = []
         final_submit_len = 0
 
-        # 插入原视频跳转
-        final_submit_obj.extend(article_tag_obj)
-        final_submit_len += article_tag_len
-
-        # 插入评分跳转
-        if score:
-            final_submit_obj.append({
-                "insert": {
-                    "tag": {
-                        "cid": video_info.parts[0].cid,
-                        "oid_type": 0,
-                        "status": 0,
-                        "index": 1,
-                        "seconds": 0,
-                        "cidCount": len(video_info.parts),
-                        "key": str(round(time.time()*1000)),
-                        "title": "",
-                        "epid": 0,
-                        "desc": "点此评分"
-                    }
-                }
-            })
-            final_submit_obj.append({
-                "attributes": {
-                    "color": "#0b84ed",
-                    "link": "https://t.bilibili.com/735845425474437172"
-                },
-                "insert": " 评分说明"
-            })
-            final_submit_obj.append({
-                "insert": "\n"
-            })
-            final_submit_len += 3
-
         # 插入OP跳转
         if op_obj:
             final_submit_obj.extend(op_obj)
             final_submit_len += op_len
 
         # 插入前言
-        if main_collection:
-            if preface:
-                final_submit_obj.append({
-                    "insert": preface
-                })
-                final_submit_obj.append({ "insert": "\n" })
-                final_submit_len += len(preface) + 1
-        else:
-            if prefaceNone:
-                final_submit_obj.append({
-                    "insert": prefaceNone
-                })
-                final_submit_obj.append({ "insert": "\n" })
-                final_submit_len += len(prefaceNone) + 1
-            elif preface:
-                final_submit_obj.append({
-                    "insert": preface
-                })
-                final_submit_obj.append({ "insert": "\n" })
-                final_submit_len += len(preface) + 1
+        if config.preface:
+            final_submit_obj.append({
+                "insert": config.preface
+            })
+            final_submit_obj.append({ "insert": "\n" })
+            final_submit_len += len(config.preface) + 1
 
-        if main_collection and imgCover:
+        if config.img_cover:
             # 插入封面图
             final_submit_obj.append({
                 "insert": {
                     "imageUpload": {
-                        "url": imgCover,
+                        "url": config.img_cover,
                         "status": "done",
                         "width": 315,
                         "id": "IMAGE_" + str(round(time.time()*1000)),
@@ -477,18 +284,9 @@ class BilibiliNoteHelper:
             })
             final_submit_obj.append({ "insert": "\n" })
 
-        # 插入诗歌
-        if poem_obj:
-            final_submit_obj.extend(poem_obj)
-            final_submit_len += poem_len
-
         # 插入歌舞导航
-        if songAndDance and song_dance_collection:
+        if config.song_and_dance and song_dance_collection:
             for item in song_dance_collection:
-                # song_dance_obj.append({
-                #     "attributes": { "color": "#cccccc" },
-                #     "insert": "┌ "
-                # })
                 for i, o in enumerate(item[1]):
                     song_dance_obj.append(o)
                     if i != len(item[1]) - 1:
@@ -516,23 +314,12 @@ class BilibiliNoteHelper:
             last_titles = []
             for item in main_collection:
                 if item[4] != last_titles:
-                    if len(item[4]) == 1:
-                        is_video_part_danmaku1 = '弹幕' in item[4][0] and '无弹幕' not in item[4][0]
-                        background1 = "#73fdea" if is_video_part_danmaku1 else "#fff359"
-                        (_, title_obj, title_len) = TimelineConverter.getTitleJson(item[4][0], background1)
-                        main_obj.extend(title_obj)
-                        main_len += title_len
-                    else:
-                        is_video_part_danmaku1 = '弹幕' in item[4][0] and '无弹幕' not in item[4][0]
-                        background1 = "#73fdea" if is_video_part_danmaku1 else "#fff359"
-                        is_video_part_danmaku2 = '弹幕' in item[4][1] and '无弹幕' not in item[4][1]
-                        background2 = "#73fdea" if is_video_part_danmaku2 else "#fff359"
+                    merged_titles = ' / '.join(item[4])
+                    (_, title_obj, title_len) = TimelineConverter.getTitleJson(merged_titles, '#73fdea')
+                    main_obj.extend(title_obj)
+                    main_len += title_len
 
-                        (_, title_obj, title_len) = TimelineConverter.getMultiTitleJson(item[4][0], item[4][1], background1, background2)
-                        main_obj.extend(title_obj)
-                        main_len += title_len
-
-                if item[1][0]:
+                if item[1]:
                     for i, o in enumerate(item[1]):
                         main_obj.append(o)
                         if i != len(item[1]) - 1:
@@ -553,11 +340,11 @@ class BilibiliNoteHelper:
             final_submit_obj.extend(main_obj)
             final_submit_len += main_len
 
-        if imgFooter:
+        if config.img_footer:
             (_, footer_title_obj, footer_title_len) = TimelineConverter.getTitleJson('附图', background="#f8ba00")
             final_submit_obj.extend(footer_title_obj)
             final_submit_len += footer_title_len
-            for imgFooterItem in imgFooter:
+            for imgFooterItem in config.img_footer:
                 final_submit_obj.append({
                     "insert": {
                         "imageUpload": {
@@ -570,30 +357,6 @@ class BilibiliNoteHelper:
                     }
                 })
                 final_submit_obj.append({ "insert": "\n" })
-
-        if output:
-            # 将文本轴存储在文件中
-            try:
-                with open(output, "w", encoding="utf-8") as f:
-                    f.write(txt_timeline)
-            except Exception as e:
-                print('文本轴写入失败，错误原因：')
-                print(e)
-
-        if not main_obj and imgNone:
-            # 插入羊驼滑跪图
-            final_submit_obj.append({
-                "insert": {
-                        "imageUpload": {
-                        "url": imgNone,
-                        "status": "done",
-                        "width": 315,
-                        "id": "IMAGE_" + str(round(time.time()*1000)),
-                        "source": "video"
-                    }
-                }
-            })
-            final_submit_obj.append({ "insert": "\n" })
 
         # 补全字数
         if final_submit_len < 300:
@@ -617,13 +380,13 @@ class BilibiliNoteHelper:
             "oid": video_info.aid,
             "note_id": note_id,
             "title": video_info.title,
-            "summary": cover,
+            "summary": config.cover,
             "content": submit_obj_str,
             "csrf": agent.csrf,
             "cont_len": max(final_submit_len, 301),
             "hash": str(round(time.time()*1000)),
-            "publish": 1 if publish else 0,
-            "auto_comment": 1 if (publish and autoComment) else 0,
+            "publish": 1 if config.publish else 0,
+            "auto_comment": 1 if (config.publish and config.auto_comment) else 0,
             "comment_format": 2
         }
         await asyncio.sleep(1)
