@@ -243,7 +243,7 @@ class TimelineConverter:
         return (obj, content_len)
 
     @staticmethod
-    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> List[List]:
+    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', token = '') -> List[List]:
         """生成分条目的时间戳
 
         Args:
@@ -256,7 +256,10 @@ class TimelineConverter:
         results = []
         for item in timeline.items:
             (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
-            results.append([item.key, [time_obj], item_obj, item_len, [info.title]])
+            if token not in item.mask:
+                results.append([item.key, [time_obj], item_obj, item_len, [info.title]])
+            else:
+                results.append([item.key, [], item_obj, item_len, [info.title]])
         return results
 
     @staticmethod
@@ -265,7 +268,7 @@ class TimelineConverter:
         with open(path, "r", encoding="utf-8-sig") as f:
             csv_l = f.readlines()
         its = [c.replace("\n", "").split(",") for c in csv_l]
-        items = [TimelineItem(int(it[0]), it[1]) for it in its]
+        items = [TimelineItem(int(it[0]), it[1], mask=(it[2] if len(it)>=3 else '')) for it in its]
         return Timeline(items)
 
     @staticmethod

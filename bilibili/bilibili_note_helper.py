@@ -210,7 +210,7 @@ class BilibiliNoteHelper:
 
             if len(part_timeline.items) != 0:
                 custom_title = config.tokens[video_part_token].marker
-                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title)
+                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title, token=str(video_part_token))
                 if not main_collection:
                     main_collection = part_result
                 else:
@@ -232,7 +232,7 @@ class BilibiliNoteHelper:
                 song_dance_timeline = part_timeline.songAndDance()
                 if len(song_dance_timeline.items) != 0:
                     custom_title = config.tokens[video_part_token].marker
-                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title)
+                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title, token=str(video_part_token))
                     if not song_dance_collection:
                         song_dance_collection = part_result
                     else:
