@@ -99,7 +99,7 @@ class TimelineConverter:
         return ({}, obj, len(title) + 10)
 
     @staticmethod
-    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '') -> Tuple[dict, list, int]:
+    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '', hidePart = False) -> Tuple[dict, list, int]:
         """生成符合Bilibili笔记需求的时间轴条目json对象
 
         Args:
@@ -118,22 +118,40 @@ class TimelineConverter:
             desc = customTitle
             obj = []
             # 时间胶囊
-            time_label = {
-                "insert": {
-                    "tag": {
-                        "cid": info.cid,
-                        "oid_type": 0,
-                        "status": 0,
-                        "index": info.index,
-                        "seconds": item.sec,
-                        "cidCount": info.cidCount,
-                        "key": str(round(time.time()*1000)),
-                        "title": "",
-                        "epid": 0,
-                        "desc": desc
+            if hidePart:
+                time_label = {
+                    "insert": {
+                        "tag": {
+                            "cid": info.cid,
+                            "oid_type": 2,
+                            "status": 0,
+                            "index": info.index,
+                            "seconds": item.sec,
+                            "cidCount": 1,
+                            "key": str(round(time.time()*1000)),
+                            "title": "",
+                            "epid": 0,
+                            "desc": desc
+                        }
                     }
                 }
-            }
+            else:
+                time_label = {
+                    "insert": {
+                        "tag": {
+                            "cid": info.cid,
+                            "oid_type": 0,
+                            "status": 0,
+                            "index": info.index,
+                            "seconds": item.sec,
+                            "cidCount": info.cidCount,
+                            "key": str(round(time.time()*1000)),
+                            "title": "",
+                            "epid": 0,
+                            "desc": desc
+                        }
+                    }
+                }
             # obj.append({ "insert": "\n" })
             # 轴引导线
             # obj.append({
@@ -221,7 +239,7 @@ class TimelineConverter:
             return (time_label, obj, len(tagContent) + 8)
 
     @staticmethod
-    async def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '') -> Tuple[list, int]:
+    async def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', hidePart = False) -> Tuple[list, int]:
         """生成符合Bilibili笔记需求的时间轴json对象
 
         Args:
@@ -235,7 +253,7 @@ class TimelineConverter:
         content_len = 0
         # 内容
         for item in timeline.items:
-            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle, hidePart)
             obj.append(time_obj)
             obj.extend(item_obj)
             content_len += item_len
@@ -243,7 +261,7 @@ class TimelineConverter:
         return (obj, content_len)
 
     @staticmethod
-    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', token = '') -> List[List]:
+    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', token = '', hidePart = False) -> List[List]:
         """生成分条目的时间戳
 
         Args:
@@ -255,7 +273,7 @@ class TimelineConverter:
         """
         results = []
         for item in timeline.items:
-            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle)
+            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle, hidePart)
             if token not in item.mask:
                 results.append([item.key, [time_obj], item_obj, item_len, [info.title]])
             else:

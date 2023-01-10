@@ -25,6 +25,7 @@
     "autoComment": true,
     "watch": false,
     "confirm": true,
+    "hidePart": false,
     "imgCover": "//api.bilibili.com/x/note/image?image_id=124497",
     "imgFooter": ["//api.bilibili.com/x/note/image?image_id=124497"]
 }

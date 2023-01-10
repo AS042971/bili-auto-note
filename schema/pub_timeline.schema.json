@@ -76,6 +76,10 @@
       "type": "string",
       "maxLength": 1024
     },
+    "hidePart": {
+      "description": "是否隐藏时间胶囊中的分P字段",
+      "type": "boolean"
+    },
     "jumpOP": {
       "description": "是否生成跳过op的按钮",
       "type": "boolean"
