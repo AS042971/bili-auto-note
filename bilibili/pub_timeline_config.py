@@ -13,7 +13,25 @@ class PubTimelineConfig:
         self.bvid: str = json_data['bvid']
         self.publish: bool = json_data['publish']
         self.cover: str = json_data['cover']
-        self.tokens = [TokenConfig(data) for data in json_data['tokens']]
+
+        if 'tokens' not in json_data and 'offsets' in json_data:
+            print('建议更新配置文件并使用tokens来标记不同类型的分P，详见README')
+            self.tokens = []
+            if 'danmakuOffsets' in json_data:
+                self.tokens.append(TokenConfig({
+                    'key': '弹幕',
+                    'offsets': json_data['danmakuOffsets'],
+                    'marker': '弹',
+                    'jumpOpDesc': '🪂点此跳过OP (弹幕版)'
+                }))
+            self.tokens.append(TokenConfig({
+                    'key': '',
+                    'offsets': json_data['offsets'],
+                    'marker': '',
+                    'jumpOpDesc': '🪂点此跳过OP (纯净版)'
+                }))
+        else:
+            self.tokens = [TokenConfig(data) for data in json_data['tokens']]
 
         # 填充可选内容
         self.custom_video_info: str = json_data['customVideoInfo'] if 'customVideoInfo' in json_data else ''
