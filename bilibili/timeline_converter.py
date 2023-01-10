@@ -5,6 +5,7 @@ from typing import Tuple, List
 from .timeline import Timeline, TimelineItem
 from .video import VideoPartInfo
 from .agent import BilibiliAgent
+from .note_object import NoteObject
 
 class TimelineConverter:
     @staticmethod
@@ -19,7 +20,7 @@ class TimelineConverter:
         return video_info_res['title']
 
     @staticmethod
-    def getTitleJson(title: str, background="#fff359", small=False) -> Tuple[dict, list, int]:
+    def getTitleJson(title: str, background="#fff359", small=False) -> NoteObject:
         obj = []
         obj.append({ "insert": "\n" })
         size = "17px" if small else "18px"
@@ -51,10 +52,10 @@ class TimelineConverter:
             },
             "insert": "\n"
         })
-        return ({}, obj, len(title) + 10)
+        return NoteObject(obj, len(title) + 10)
 
     @staticmethod
-    def getMultiTitleJson(title: str, title2: str, background="#fff359", background2="#fff359") -> Tuple[dict, list, int]:
+    def getMultiTitleJson(title: str, title2: str, background="#fff359", background2="#fff359") -> NoteObject:
         obj = []
         obj.append({ "insert": "\n" })
 
@@ -96,189 +97,95 @@ class TimelineConverter:
             },
             "insert": "\n"
         })
-        return ({}, obj, len(title) + 10)
+        return NoteObject(obj, len(title) + 10)
 
     @staticmethod
-    async def getTimelineItemJson(item: TimelineItem, info: VideoPartInfo, customTitle = '', hidePart = False) -> Tuple[dict, list, int]:
-        """生成符合Bilibili笔记需求的时间轴条目json对象
-
-        Args:
-            item (TimelineItem): 时间轴条目
-            info (VideoPartInfo): 视频信息
-
-        Returns:
-            list: 对应的json对象
-        """
-        # 轴内容
+    async def getTimelineItemJson(item: TimelineItem) -> NoteObject:
         tagContent = item.tag
         if tagContent.startswith('##'):
             return TimelineConverter.getTitleJson(tagContent[2:], background=None, small=True)
-        else:
-            title = "P" + str(info.index)
-            desc = customTitle
-            obj = []
-            # 时间胶囊
-            if hidePart:
-                time_label = {
-                    "insert": {
-                        "tag": {
-                            "cid": info.cid,
-                            "oid_type": 2,
-                            "status": 0,
-                            "index": info.index,
-                            "seconds": item.sec,
-                            "cidCount": 1,
-                            "key": str(round(time.time()*1000)),
-                            "title": "",
-                            "epid": 0,
-                            "desc": desc
-                        }
-                    }
-                }
-            else:
-                time_label = {
-                    "insert": {
-                        "tag": {
-                            "cid": info.cid,
-                            "oid_type": 0,
-                            "status": 0,
-                            "index": info.index,
-                            "seconds": item.sec,
-                            "cidCount": info.cidCount,
-                            "key": str(round(time.time()*1000)),
-                            "title": "",
-                            "epid": 0,
-                            "desc": desc
-                        }
-                    }
-                }
-            # obj.append({ "insert": "\n" })
-            # 轴引导线
-            # obj.append({
-            #     "attributes": { "color": "#cccccc" },
-            #     "insert": "└ "
-            # })
-            contentType = ''
-            if tagContent.endswith('**'):
-                tagContent = tagContent[:-2]
-                contentType = 'ex_mark'
-            elif tagContent.endswith('*'):
-                tagContent = tagContent[:-1]
-                contentType = 'mark'
-            elif tagContent.startswith('🎤'):
-                contentType = 'song'
-            elif tagContent.startswith('💃'):
-                contentType = 'dance'
 
-            contentParts = re.split('(BV[A-Za-z0-9]{10})|(https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7})',tagContent)
-            for part in contentParts:
-                if not part:
-                    continue
-                if re.match('BV[A-Za-z0-9]{10}', part):
-                    title = await TimelineConverter.getBvTitle(part)
-                    title = '▶️' + title
-                    obj.append({
-                        "attributes": {
-                            "color": "#0b84ed",
-                            "link": "https://www.bilibili.com/video/" + part
-                        },
-                        "insert": title
-                    })
-                elif re.match('https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7}', part):
-                    obj.append({
-                        "attributes": {
-                            "color": "#0b84ed",
-                            "link": part
-                        },
-                        "insert": '🔗打开链接'
-                    })
-                else:
-                    if contentType == 'ex_mark':
-                        obj.append({
-                            "attributes": {
-                                "color": "#ee230d",
-                                "bold": True
-                            },
-                            "insert": part
-                        })
-                    elif contentType == 'mark':
-                        obj.append({
-                            "attributes": {
-                                "color": "#ee230d"
-                            },
-                            "insert": part
-                        })
-                    elif contentType == 'song':
-                        obj.append({
-                            "attributes": {
-                                "color": "#0b84ed"
-                            },
-                            "insert": part
-                        })
-                    elif contentType == 'dance':
-                        obj.append({
-                            "attributes": {
-                                "color": "#017001",
-                            },
-                            "insert": part
-                        })
-                    else:
-                        obj.append({
-                            "insert": part
-                        })
+        obj = []
+        contentType = ''
+        if tagContent.endswith('**'):
+            tagContent = tagContent[:-2]
+            contentType = 'ex_mark'
+        elif tagContent.endswith('*'):
+            tagContent = tagContent[:-1]
+            contentType = 'mark'
+        elif tagContent.startswith('🎤'):
+            contentType = 'song'
+        elif tagContent.startswith('💃'):
+            contentType = 'dance'
 
-            if len(contentParts) > 1:
+        contentParts = re.split('(BV[A-Za-z0-9]{10})|(https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7})',tagContent)
+
+        for part in contentParts:
+            if not part:
+                continue
+            if re.match('BV[A-Za-z0-9]{10}', part):
+                title = await TimelineConverter.getBvTitle(part)
+                title = '▶️' + title
                 obj.append({
                     "attributes": {
-                        "color": "#cccccc",
+                        "color": "#0b84ed",
+                        "link": "https://www.bilibili.com/video/" + part
                     },
-                    "insert": ' (手机端建议从评论回复中打开链接)'
+                    "insert": title
                 })
-
-            obj.append({ "insert": "\n" })
-            return (time_label, obj, len(tagContent) + 8)
-
-    @staticmethod
-    async def getTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', hidePart = False) -> Tuple[list, int]:
-        """生成符合Bilibili笔记需求的时间轴json对象
-
-        Args:
-            timeline (Timeline): 时间轴
-            info (VideoPartInfo): 视频信息
-
-        Returns:
-            list: 对应的json对象
-        """
-        obj = []
-        content_len = 0
-        # 内容
-        for item in timeline.items:
-            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle, hidePart)
-            obj.append(time_obj)
-            obj.extend(item_obj)
-            content_len += item_len
-        content_len += 1
-        return (obj, content_len)
-
-    @staticmethod
-    async def getSeparateTimelineJson(timeline: Timeline, info: VideoPartInfo, customTitle = '', token = '', hidePart = False) -> List[List]:
-        """生成分条目的时间戳
-
-        Args:
-            timeline (Timeline): 时间轴
-            info (VideoPartInfo): 视频信息
-
-        Returns:
-            List[List[str, list, int]]: _description_
-        """
-        results = []
-        for item in timeline.items:
-            (time_obj, item_obj, item_len) = await TimelineConverter.getTimelineItemJson(item, info, customTitle, hidePart)
-            if token not in item.mask:
-                results.append([item.key, [time_obj], item_obj, item_len, [info.title]])
+            elif re.match('https:\\/\\/b23\\.tv\\/[A-Za-z0-9]{7}', part):
+                obj.append({
+                    "attributes": {
+                        "color": "#0b84ed",
+                        "link": part
+                    },
+                    "insert": '🔗打开链接'
+                })
             else:
-                results.append([item.key, [], item_obj, item_len, [info.title]])
-        return results
+                if contentType == 'ex_mark':
+                    obj.append({
+                        "attributes": {
+                            "color": "#ee230d",
+                            "bold": True
+                        },
+                        "insert": part
+                    })
+                elif contentType == 'mark':
+                    obj.append({
+                        "attributes": {
+                            "color": "#ee230d"
+                        },
+                        "insert": part
+                    })
+                elif contentType == 'song':
+                    obj.append({
+                        "attributes": {
+                            "color": "#0b84ed"
+                        },
+                        "insert": part
+                    })
+                elif contentType == 'dance':
+                    obj.append({
+                        "attributes": {
+                            "color": "#017001",
+                        },
+                        "insert": part
+                    })
+                else:
+                    obj.append({
+                        "insert": part
+                    })
+
+        if len(contentParts) > 1:
+            obj.append({
+                "attributes": {
+                    "color": "#cccccc",
+                },
+                "insert": ' (手机端建议从评论回复中打开链接)'
+            })
+
+        obj.append({ "insert": "\n" })
+        return NoteObject(obj, len(tagContent) + 8)
 
     @staticmethod
     def loadTimelineFromCSV(path: str) -> Timeline:

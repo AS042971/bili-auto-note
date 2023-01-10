@@ -6,12 +6,13 @@ import asyncio
 import random
 
 from typing import Tuple, List
-
 from .timeline import Timeline, TimelineItem
 from .video import VideoInfo, VideoPartInfo
 from .agent import BilibiliAgent
 from .timeline_converter import TimelineConverter
 from .pub_timeline_config import PubTimelineConfig
+from .runtime_timeline import RuntimeTimeline
+from .note_object import NoteObject
 
 class TokenInfo:
     def __init__(self) -> None:
@@ -131,24 +132,9 @@ class BilibiliNoteHelper:
 
         # 开始生成笔记
         token_info = [TokenInfo() for _ in range(len(config.tokens))]
+        runtime_timeline = await RuntimeTimeline.getRuntimeTimeline(timeline)
 
-        op_obj = []
-        op_len = 0
-
-        main_obj = []
-        main_len = 0
-        main_collection = []
-
-        song_dance_obj = []
-        song_dance_len = 0
-        song_dance_collection = []
-
-        # 生成歌舞导航容器
-        if config.song_and_dance:
-            (_, song_dance_title_obj, song_dance_title_len) = TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
-            song_dance_obj.extend(song_dance_title_obj)
-            song_dance_len += song_dance_title_len
-
+        op_obj = NoteObject()
         # 生成每个分P的轴
         for video_part in video_info.parts:
             # 自动忽略过短的视频（一般是用来垫的视频，不会对应到offsets序列）
@@ -162,7 +148,7 @@ class BilibiliNoteHelper:
                     video_part_token = i
                     break
             if video_part_token == -1:
-                print(f'{video_part.title}不归属于任何token，请确认配置')
+                print(f'{video_part.title} 不归属于任何token，请确认配置')
                 continue
 
             # 读取分p对应的偏移量信息
@@ -181,97 +167,68 @@ class BilibiliNoteHelper:
             else:
                 continue
 
-            if config.jumpOP and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
+            if config.jumpOP and offset < 0 and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
                 token_info[video_part_token].first_part = False
-                op_obj.append({
-                    "insert": {
-                        "tag": {
-                            "cid": video_part.cid,
-                            "oid_type": 0,
-                            "status": 0,
-                            "index": video_part.index,
-                            "seconds": -offset,
-                            "cidCount": video_part.cidCount,
-                            "key": str(round(time.time()*1000)),
-                            "desc": config.tokens[video_part_token].jump_op_desc,
-                            "title": "",
-                            "epid": 0
+                if config.hide_part:
+                    op_obj.append({
+                        "insert": {
+                            "tag": {
+                                "cid": video_part.cid,
+                                "oid_type": 2,
+                                "status": 0,
+                                "index": video_part.index,
+                                "seconds": -offset,
+                                "cidCount": 1,
+                                "key": str(round(time.time()*1000)),
+                                "desc": config.tokens[video_part_token].jump_op_desc,
+                                "title": "",
+                                "epid": 0
+                            }
                         }
-                    }
-                })
-                op_obj.append({ "insert": "\n" })
-                op_len += 2
+                    }, 1)
+                else:
+                    op_obj.append({
+                        "insert": {
+                            "tag": {
+                                "cid": video_part.cid,
+                                "oid_type": 0,
+                                "status": 0,
+                                "index": video_part.index,
+                                "seconds": -offset,
+                                "cidCount": video_part.cidCount,
+                                "key": str(round(time.time()*1000)),
+                                "desc": config.tokens[video_part_token].jump_op_desc,
+                                "title": "",
+                                "epid": 0
+                            }
+                        }
+                    }, 1)
 
             # 从原始时间轴中切出分p时间轴
-            part_timeline = timeline.clip(offset, video_part.duration)
-            if len(part_timeline.items) == 0:
-                print(f'分P{video_part.title}不具有任何时间轴条目')
-                continue
-
-            if len(part_timeline.items) != 0:
-                custom_title = config.tokens[video_part_token].marker
-                part_result = await TimelineConverter.getSeparateTimelineJson(part_timeline, video_part, customTitle=custom_title, token=str(video_part_token), hidePart=config.hide_part)
-                if not main_collection:
-                    main_collection = part_result
-                else:
-                    for item in part_result:
-                        found = False
-                        # 合并同名项目
-                        for ref in main_collection:
-                            if item[0] == ref[0]:
-                                ref[1].extend(item[1])
-                                ref[3] += 1
-                                ref[4].extend(item[4])
-                                found = True
-                                break
-                        if not found:
-                            main_collection.append(item)
-
-            # 筛选分p的歌舞成分
-            if config.song_and_dance:
-                song_dance_timeline = part_timeline.songAndDance()
-                if len(song_dance_timeline.items) != 0:
-                    custom_title = config.tokens[video_part_token].marker
-                    part_result = await TimelineConverter.getSeparateTimelineJson(song_dance_timeline, video_part, customTitle=custom_title, token=str(video_part_token), hidePart=config.hide_part)
-                    if not song_dance_collection:
-                        song_dance_collection = part_result
-                    else:
-                        for item in part_result:
-                            found = False
-                            # 合并同名项目
-                            for ref in song_dance_collection:
-                                if item[0] == ref[0]:
-                                    ref[1].extend(item[1])
-                                    ref[3] += 1
-                                    found = True
-                                    break
-                            if not found:
-                                song_dance_collection.append(item)
-
-        if not main_collection:
-            print('没有可用的笔记内容')
-            return part_collection
+            runtime_timeline.registerPartInfo(video_part, offset, video_part_token, config.tokens[video_part_token].marker, config.hide_part)
 
         # 合成
-        final_submit_obj = []
-        final_submit_len = 0
+        final_submit_obj = NoteObject()
 
         # 插入OP跳转
-        if op_obj:
-            final_submit_obj.extend(op_obj)
-            final_submit_len += op_len
+        if op_obj.length != 0:
+            final_submit_obj += op_obj
+            final_submit_obj.appendNewLine()
 
         # 插入前言
         if config.preface:
-            final_submit_obj.append({
+            preface_obj = NoteObject()
+            preface_obj.append({
                 "insert": config.preface
-            })
-            final_submit_obj.append({ "insert": "\n" })
-            final_submit_len += len(config.preface) + 1
+            }, 1)
+            final_submit_obj += preface_obj
+            final_submit_obj.appendNewLine()
 
+        # 插入封面图
         if config.img_cover:
             # 插入封面图
-            final_submit_obj.append({
+            cover_obj = NoteObject()
+            cover_obj.append({
                 "insert": {
                     "imageUpload": {
                         "url": config.img_cover,
@@ -281,71 +238,39 @@ class BilibiliNoteHelper:
                         "source": "video"
                     }
                 }
-            })
-            final_submit_obj.append({ "insert": "\n" })
+            }, 1)
+            final_submit_obj += cover_obj
+            final_submit_obj.appendNewLine()
 
         # 插入歌舞导航
-        if config.song_and_dance and song_dance_collection:
-            for item in song_dance_collection:
-                for i, o in enumerate(item[1]):
-                    song_dance_obj.append(o)
-                    if i != len(item[1]) - 1:
-                        song_dance_obj.append({
-                            "attributes": { "color": "#cccccc" },
-                            "insert": " "
-                        })
-                song_dance_obj.append({
-                    "attributes": { "color": "#cccccc" },
-                    "insert": " ⇙"
-                })
-                song_dance_obj.append({
-                    "insert": "\n"
-                })
-                song_dance_obj.extend(item[2])
-                song_dance_len += item[3]
-            final_submit_obj.extend(song_dance_obj)
-            final_submit_len += song_dance_len
+        if config.song_and_dance:
+            song_dance_timeline = runtime_timeline.songAndDance()
+            if song_dance_timeline.items:
+                song_dance_obj = NoteObject()
+                song_dance_obj += TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
+                for item in song_dance_timeline.items:
+                    song_dance_obj += item.getObject()
+                final_submit_obj += song_dance_obj
+                final_submit_obj.appendNewLine()
 
         # 插入主轴
-        # final_submit_obj.extend(main_obj)
-        # final_submit_len += main_len
-
-        if main_collection:
+        if True:
+            main_obj = NoteObject()
             last_titles = []
-            for item in main_collection:
-                if item[4] != last_titles:
-                    merged_titles = ' / '.join(item[4])
-                    (_, title_obj, title_len) = TimelineConverter.getTitleJson(merged_titles, '#73fdea')
-                    main_obj.extend(title_obj)
-                    main_len += title_len
-
-                if item[1]:
-                    for i, o in enumerate(item[1]):
-                        main_obj.append(o)
-                        if i != len(item[1]) - 1:
-                            main_obj.append({
-                                "attributes": { "color": "#cccccc" },
-                                "insert": " "
-                            })
-                    main_obj.append({
-                        "attributes": { "color": "#cccccc" },
-                        "insert": " ⇙"
-                    })
-                    main_obj.append({
-                        "insert": "\n"
-                    })
-                main_obj.extend(item[2])
-                main_len += item[3]
-                last_titles = item[4]
-            final_submit_obj.extend(main_obj)
-            final_submit_len += main_len
+            for item in runtime_timeline:
+                if item.part_names != last_titles:
+                    merged_titles = ' / '.join(item.part_names)
+                    last_titles = item.part_names
+                    main_obj += TimelineConverter.getTitleJson(merged_titles, '#73fdea')
+                main_obj += item.getObject()
+            final_submit_obj += main_obj
+            final_submit_obj.appendNewLine()
 
         if config.img_footer:
-            (_, footer_title_obj, footer_title_len) = TimelineConverter.getTitleJson('附图', background="#f8ba00")
-            final_submit_obj.extend(footer_title_obj)
-            final_submit_len += footer_title_len
+            img_footer_obj = NoteObject()
+            img_footer_obj += TimelineConverter.getTitleJson('附图', background="#f8ba00")
             for imgFooterItem in config.img_footer:
-                final_submit_obj.append({
+                img_footer_obj.append({
                     "insert": {
                         "imageUpload": {
                             "url": imgFooterItem,
@@ -355,27 +280,28 @@ class BilibiliNoteHelper:
                             "source": "video"
                         }
                     }
-                })
-                final_submit_obj.append({ "insert": "\n" })
+                }, 1)
+                img_footer_obj.appendNewLine()
+            final_submit_obj.appendNewLine()
 
         # 补全字数
-        if final_submit_len < 300:
+        if final_submit_obj.length < 300:
             sample = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
             ran_str_list = []
-            for i in range(300 - final_submit_len):
+            for i in range(300 - final_submit_obj.length):
                 char = random.choice(sample)
                 ran_str_list.append(char)
             ran_str = ''.join(ran_str_list)
 
             for _ in range(10):
-                final_submit_obj.append({ "insert": "\n" })
+                final_submit_obj.appendNewLine()
             final_submit_obj.append({
                 "attributes": { "color": "#ffffff" },
                 "insert": ran_str
-            })
-            final_submit_len = 311
+            }, len(ran_str))
+            final_submit_obj.length = 311
 
-        submit_obj_str = json.dumps(final_submit_obj, indent=None, ensure_ascii=False, separators=(',', ':'))
+        submit_obj_str = json.dumps(final_submit_obj.obj, indent=None, ensure_ascii=False, separators=(',', ':'))
         data = {
             "oid": video_info.aid,
             "note_id": note_id,
@@ -383,7 +309,7 @@ class BilibiliNoteHelper:
             "summary": config.cover,
             "content": submit_obj_str,
             "csrf": agent.csrf,
-            "cont_len": max(final_submit_len, 301),
+            "cont_len": max(final_submit_obj.length, 301),
             "hash": str(round(time.time()*1000)),
             "publish": 1 if config.publish else 0,
             "auto_comment": 1 if (config.publish and config.auto_comment) else 0,
