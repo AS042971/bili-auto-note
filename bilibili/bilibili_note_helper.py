@@ -13,6 +13,7 @@ from .timeline_converter import TimelineConverter
 from .pub_timeline_config import PubTimelineConfig
 from .runtime_timeline import RuntimeTimeline
 from .note_object import NoteObject
+from .tokenizer import getContentJson
 
 class TokenInfo:
     def __init__(self) -> None:
@@ -217,10 +218,7 @@ class BilibiliNoteHelper:
 
         # 插入前言
         if config.preface:
-            preface_obj = NoteObject()
-            preface_obj.append({
-                "insert": config.preface
-            }, 1)
+            preface_obj = getContentJson(config.preface)
             final_submit_obj += preface_obj
             final_submit_obj.appendNewLine()
 
