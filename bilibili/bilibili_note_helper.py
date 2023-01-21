@@ -168,7 +168,7 @@ class BilibiliNoteHelper:
             else:
                 continue
 
-            if config.jumpOP and offset < 0 and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
+            if config.jumpOP and offset <= 0 and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
                 token_info[video_part_token].first_part = False
                 if config.hide_part:
                     op_obj.append({

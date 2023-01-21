@@ -14,7 +14,7 @@ class RuntimeTimelineItem:
 
     def registerPartInfo(self, info: VideoPartInfo, start_time: int, token_index: int, customTitle: str, hidePart: bool) -> None:
         local_sec = self.item.sec - start_time
-        if local_sec <= 0 or local_sec > info.duration:
+        if local_sec < 0 or local_sec > info.duration:
             return
         self.part_names.append(info.title)
         if str(token_index) in self.item.mask:
