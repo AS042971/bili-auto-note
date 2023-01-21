@@ -218,7 +218,7 @@ class BilibiliNoteHelper:
 
         # 插入前言
         if config.preface:
-            preface_obj = getContentJson(config.preface)
+            preface_obj = await getContentJson(config.preface)
             final_submit_obj += preface_obj
             final_submit_obj.appendNewLine()
 
