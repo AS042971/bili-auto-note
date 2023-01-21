@@ -78,6 +78,7 @@ def tokenizer(item: str) -> List[Token]:
                 token_end = current_str.find(' ')
                 if token_end == -1:
                     url = current_str
+                    current_str = ''
                 else:
                     url = current_str[:token_end]
                     current_str = current_str[token_end+1:]
