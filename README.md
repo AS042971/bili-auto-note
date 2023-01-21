@@ -63,6 +63,68 @@
 
 另外注意，由于Excel的编辑机制，在添加时间标签时推荐将数字0后置
 
+## 轴文本中的Token
+
+可在轴文本中增加一些控制指令，单独调整每个部分的配置。
+例如，设置轴内容为
+
+    [B|#ee230d]笔记功能大更新[N|R]现在支持[N|N]换行[N|N]设置[B] 粗体 [R|I] 斜体 [R|#ee230d]多[#ff654e]种[#f8ba00]颜[#017001]色
+
+显示效果为
+
+![demo](demo.png)
+
+控制指令放在方框内，使用竖线进行分隔，指令具体包括
+
+| 指令名 | 含义 |
+|-------|------|
+| B     | 粗体 |
+| I     | 斜体 |
+| #开头字符串 | 颜色（见颜色表） |
+| R     | 将颜色、粗体、斜体重置为默认值 |
+| N     | 插入换行符 |
+
+除非被新的指令替代，字体样式指令的作用范围将持续到轴条目的末尾
+
+### 颜色表
+
+<font color=#000000 face="Consolas">#000000</font>
+<font color=#333333 face="Consolas">#333333</font>
+<font color=#494949 face="Consolas">#494949</font>
+<font color=#a5a5a5 face="Consolas">#a5a5a5</font>
+<font color=#cccccc face="Consolas">#cccccc</font>
+
+<font color=#89d4ff face="Consolas">#89d4ff</font>
+<font color=#73fdea face="Consolas">#73fdea</font>
+<font color=#89fa4e face="Consolas">#89fa4e</font>
+<font color=#fff359 face="Consolas">#fff359</font>
+<font color=#ff968d face="Consolas">#ff968d</font>
+
+<font color=#ffa0d0 face="Consolas">#ffa0d0</font>
+<font color=#0b84ed face="Consolas">#0b84ed</font>
+<font color=#18e7cf face="Consolas">#18e7cf</font>
+<font color=#60d837 face="Consolas">#60d837</font>
+<font color=#fbe231 face="Consolas">#fbe231</font>
+
+<font color=#ff654e face="Consolas">#ff654e</font>
+<font color=#ea0077 face="Consolas">#ea0077</font>
+<font color=#0176ba face="Consolas">#0176ba</font>
+<font color=#068f86 face="Consolas">#068f86</font>
+<font color=#1db100 face="Consolas">#1db100</font>
+
+<font color=#f8ba00 face="Consolas">#f8ba00</font>
+<font color=#ee230d face="Consolas">#ee230d</font>
+<font color=#cb297a face="Consolas">#cb297a</font>
+<font color=#004e80 face="Consolas">#004e80</font>
+<font color=#017c76 face="Consolas">#017c76</font>
+
+<font color=#017001 face="Consolas">#017001</font>
+<font color=#ff9201 face="Consolas">#ff9201</font>
+<font color=#b41700 face="Consolas">#b41700</font>
+<font color=#99195e face="Consolas">#99195e</font>
+<font color=#ffffff face="Consolas">#ffffff</font>
+
+
 ## 发布时间轴
 
 ### 教程
