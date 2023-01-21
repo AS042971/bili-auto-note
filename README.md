@@ -124,6 +124,8 @@
 <font color=#99195e face="Consolas">#99195e</font>
 <font color=#ffffff face="Consolas">#ffffff</font>
 
+![colors](colors.png)
+
 
 ## 发布时间轴
 
