@@ -212,7 +212,8 @@ class BilibiliNoteHelper:
         final_submit_obj = NoteObject()
 
         for line in template:
-            line = line[:-1]
+            if line.endswith('\n'):
+                line = line[:-1]
             if line == '.. jump_op':
                 final_submit_obj += op_obj
                 final_submit_obj.appendNewLine()
