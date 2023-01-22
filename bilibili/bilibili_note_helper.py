@@ -58,10 +58,10 @@ class BilibiliNoteHelper:
 
     @staticmethod
     async def sendNote(
-            timeline: Timeline, agent: BilibiliAgent,
+            timeline: Timeline, template: List[str], agent: BilibiliAgent,
             config: PubTimelineConfig,
             confirmed: bool = False,
-            previousPartCollection: List[str] = []
+            previousPartCollection: List[str] = None
         ) -> List[str]:
         """发送笔记
 
@@ -168,7 +168,7 @@ class BilibiliNoteHelper:
             else:
                 continue
 
-            if config.jumpOP and offset <= 0 and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
+            if offset <= 0 and token_info[video_part_token].first_part and config.tokens[video_part_token].jump_op_desc:
                 token_info[video_part_token].first_part = False
                 if config.hide_part:
                     op_obj.append({
@@ -211,76 +211,34 @@ class BilibiliNoteHelper:
         # 合成
         final_submit_obj = NoteObject()
 
-        # 插入OP跳转
-        if op_obj.length != 0:
-            final_submit_obj += op_obj
-            final_submit_obj.appendNewLine()
-
-        # 插入前言
-        if config.preface:
-            preface_obj = await getContentJson(config.preface)
-            final_submit_obj += preface_obj
-            final_submit_obj.appendNewLine()
-
-        # 插入封面图
-        if config.img_cover:
-            # 插入封面图
-            cover_obj = NoteObject()
-            cover_obj.append({
-                "insert": {
-                    "imageUpload": {
-                        "url": config.img_cover,
-                        "status": "done",
-                        "width": 315,
-                        "id": "IMAGE_" + str(round(time.time()*1000)),
-                        "source": "video"
-                    }
-                }
-            }, 1)
-            final_submit_obj += cover_obj
-            final_submit_obj.appendNewLine()
-
-        # 插入歌舞导航
-        if config.song_and_dance:
-            song_dance_timeline = runtime_timeline.songAndDance()
-            if song_dance_timeline.items:
-                song_dance_obj = NoteObject()
-                song_dance_obj += TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
-                for item in song_dance_timeline.items:
-                    song_dance_obj += item.getObject()
-                final_submit_obj += song_dance_obj
+        for line in template:
+            line = line[:-1]
+            if line == '.. jump_op':
+                final_submit_obj += op_obj
                 final_submit_obj.appendNewLine()
-
-        # 插入主轴
-        if True:
-            main_obj = NoteObject()
-            last_titles = []
-            for item in runtime_timeline:
-                if item.part_names != last_titles:
-                    merged_titles = ' / '.join(item.part_names)
-                    last_titles = item.part_names
-                    main_obj += TimelineConverter.getTitleJson(merged_titles, '#73fdea')
-                main_obj += item.getObject()
-            final_submit_obj += main_obj
-            final_submit_obj.appendNewLine()
-
-        if config.img_footer:
-            img_footer_obj = NoteObject()
-            img_footer_obj += TimelineConverter.getTitleJson('附图', background="#f8ba00")
-            for imgFooterItem in config.img_footer:
-                img_footer_obj.append({
-                    "insert": {
-                        "imageUpload": {
-                            "url": imgFooterItem,
-                            "status": "done",
-                            "width": 315,
-                            "id": "IMAGE_" + str(round(time.time()*1000)),
-                            "source": "video"
-                        }
-                    }
-                }, 1)
-                img_footer_obj.appendNewLine()
-            final_submit_obj.appendNewLine()
+            elif line == '.. song_dance':
+                song_dance_timeline = runtime_timeline.songAndDance()
+                if song_dance_timeline.items:
+                    song_dance_obj = NoteObject()
+                    song_dance_obj += TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
+                    for item in song_dance_timeline.items:
+                        song_dance_obj += item.getObject()
+                    final_submit_obj += song_dance_obj
+                    final_submit_obj.appendNewLine()
+            elif line == '.. body':
+                main_obj = NoteObject()
+                last_titles = []
+                for item in runtime_timeline:
+                    if item.part_names != last_titles:
+                        merged_titles = ' / '.join(item.part_names)
+                        last_titles = item.part_names
+                        main_obj += TimelineConverter.getTitleJson(merged_titles, '#73fdea')
+                    main_obj += item.getObject()
+                final_submit_obj += main_obj
+                final_submit_obj.appendNewLine()
+            else:
+                line_obj = await getContentJson(line)
+                final_submit_obj += line_obj
 
         # 补全字数
         if final_submit_obj.length < 300:

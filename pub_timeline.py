@@ -18,10 +18,13 @@ async def main(config_path: str):
         watch: bool = json_data['watch'] if 'watch' in json_data else False
         confirm: bool = json_data['confirm'] if 'confirm' in json_data else True
 
+        with open(json_data['template'], "r", encoding="utf-8") as f:
+            template_lines = f.readlines()
+
         if not watch:
             timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
 
-            await BilibiliNoteHelper.sendNote(timeline, agent, config, confirmed=not confirm)
+            await BilibiliNoteHelper.sendNote(timeline, template_lines, agent, config, confirmed=not confirm)
         else:
             print('请注意，自动监控功能已打开，每次目标视频分P变化或笔记文件更新时将自动更新笔记')
             failed_cnt = 0
@@ -42,11 +45,11 @@ async def main(config_path: str):
                     timeline = TimelineConverter.loadTimelineFromCSV(json_data['timeline'])
                     if first_time:
                         # 首次，正常地发布笔记
-                        published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, config ,confirmed= not confirm)
+                        published_parts = await BilibiliNoteHelper.sendNote(timeline, template_lines, agent, config ,confirmed= not confirm)
                         first_time = False
                     else:
                         # 后续循环，不进行确认，同时自动发布
-                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, agent, config, confirmed=True, previousPartCollection=published_parts)
+                        new_published_parts = await BilibiliNoteHelper.sendNote(timeline, template_lines, agent, config, confirmed=True, previousPartCollection=published_parts)
                         if new_published_parts != published_parts:
                             print('已自动更新笔记')
                             published_parts = new_published_parts

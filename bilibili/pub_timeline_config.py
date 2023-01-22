@@ -39,11 +39,8 @@ class PubTimelineConfig:
         self.hide_part: bool = json_data['hidePart'] if 'hidePart' in json_data else False
 
         # 填充基础构架
-        self.song_and_dance: bool = json_data['songAndDanceAbstract'] if 'songAndDanceAbstract' in json_data else False
-        self.jumpOP: bool = json_data['jumpOP'] if 'jumpOP' in json_data else False
-        self.preface: str = json_data['preface'] if 'preface' in json_data else ''
-        self.img_cover: str = json_data['imgCover'] if 'imgCover' in json_data else ''
-        self.img_footer: list = json_data['imgFooter'] if 'imgFooter' in json_data else []
+        if 'songAndDanceAbstract' in json_data or 'jumpOP' in json_data or 'preface' in json_data or 'imgCover' in json_data or 'imgFooter' in json_data:
+            print('注意：配置字 songAndDanceAbstract/jumpOP/preface/imgCover/imgFooter 已不再使用，请在template内添加')
 
         # 发布选项
         self.auto_comment: bool = json_data['autoComment'] if 'autoComment' in json_data else True
