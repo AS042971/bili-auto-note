@@ -159,6 +159,7 @@
         "cookie": "SESSDATA=<SESSDATA>; bili_jct=<CSRF>",
         "bvid": "BV15U4y1d7TX",
         "timeline": "./data/timeline.csv",
+        "template": "./data/template.rst",
         "tokens": [
             {
                 "key": "弹幕",
@@ -173,9 +174,6 @@
         ],
         "ignoreThreshold": 600,
         "cover": "这是一个多P自动发布笔记的测试\n欢迎进入笔记打轴的自动化时代",
-        "preface": "【注意】今天也要开开心心地看录播。可点击上方按钮快速跳过OP。",
-        "jumpOP": true,
-        "songAndDanceAbstract": true,
         "publish": true,
         "autoComment": true,
         "watch": false,
@@ -187,10 +185,13 @@
 
 **注意：2023年1月8日更新后移除了offsets和danmakuOffsets两个选项，转而使用tokens配置。旧版本配置文件将不兼容，请注意修改**
 
+**注意：2023年1月21日更新后移除了文档结构配置选项，转而使用template配置。旧版本配置文件将不兼容，请注意修改**
+
 * `$schema`: 配置文件格式规范。仅在编辑此文件时生效；有或没有此项、此项内容如何均不会影响程序的正常功能。但在有此项的情况下，使用 Visual Studio Code 等编辑器对配置文件进行编辑时，可以自动弹出每项内容的说明并自动补齐部分项目。
 * `cookie`: 发送笔记用户的cookie，必须包含 `SESSDATA` 和 `bili_jct` 两项
 * `bvid`: 目标视频BV号
 * `timeline`: 时间轴文件路径
+* `template`: 笔记模板文件路径
 * `tokens`: 视频分P的不同类别
   * `key`: 用来识别这个类别的关键词
   * `offsets`: 目标视频每个分P开始时刻对应的统一时间轴时刻，单位为秒。注意，此处的值可能为负数（比如果统一时间轴以开场对齐，但视频中包含OP时）。
@@ -199,14 +200,26 @@
   * `jumpOpDesc`: 跳过OP按钮显示的内容
 * `ignoreThreshold`: 时间短于此值的分P将被忽略，单位为秒，默认为600（即10分钟）。此参数用于处理占位视频。被忽略的视频不会参与到 `offsets` 和 `danmakuOffsets` 的推断中
 * `cover`: 视频转制通过时发送至评论区的文案
-* `preface`: 笔记开头的文案
-* `jumpOP`: 是否生成跳过op的按钮
-* `songAndDanceAbstract`: 在笔记开头添加歌舞快速导航
 * `publish`: 是否自动发布
 * `autoComment`: 笔记发布后是否自动发评论
 * `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出
 * `confirm`: 是否弹出确认选项
 * `hidePart`: 隐藏时间标签中的分P标识。推荐在超过3个时间标签或者纯净/弹幕各1P时打开此项
+
+### template文件说明
+
+template文件为笔记内容的模板，样例如下
+
+    .. jump_op
+    [B|#ff654e]欢迎大家来看今天的直播！
+    [i124497]
+    .. song_dance
+    .. body
+    [i124497]
+
+    [#cccccc]作者：AS042971
+
+其中，`.. jump_op`、`.. song_dance`、`.. body`三个模块在程序运行时会被替换为跳过OP按钮、歌舞导航区和笔记主体区；其余的行按照先前的富文本规则解析
 
 ## 小工具：监控评论区
 

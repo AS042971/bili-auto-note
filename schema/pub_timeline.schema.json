@@ -14,6 +14,10 @@
       "maxLength":12,
       "minLength":12
     },
+    "template": {
+      "description": "笔记模板文件路径",
+      "type": "string"
+    },
     "timeline": {
       "description": "时间轴文件路径",
       "type": "string"
@@ -71,21 +75,8 @@
       "minLength": 1,
       "maxLength": 85
     },
-    "preface": {
-      "description": "笔记轴开头的文本",
-      "type": "string",
-      "maxLength": 1024
-    },
     "hidePart": {
       "description": "是否隐藏时间胶囊中的分P字段",
-      "type": "boolean"
-    },
-    "jumpOP": {
-      "description": "是否生成跳过op的按钮",
-      "type": "boolean"
-    },
-    "songAndDanceAbstract": {
-      "description": "是否生成歌舞摘要",
       "type": "boolean"
     },
     "publish": {
@@ -103,20 +94,6 @@
     "confirm": {
       "description": "发布前是否确认",
       "type": "boolean"
-    },
-    "imgCover": {
-      "description": "笔记封面照片",
-      "type": "string",
-      "maxLength": 1024
-    },
-    "imgFooter": {
-      "description": "笔记末尾照片",
-      "type": "array",
-      "items": {
-        "description": "图片URL",
-        "type": "string"
-      },
-      "uniqueItems": true
     }
   },
   "required": [
