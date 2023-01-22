@@ -13,7 +13,7 @@ from .timeline_converter import TimelineConverter
 from .pub_timeline_config import PubTimelineConfig
 from .runtime_timeline import RuntimeTimeline
 from .note_object import NoteObject
-from .tokenizer import getContentJson
+from .tokenizer import getContentJson, getTitleJson
 
 class TokenInfo:
     def __init__(self) -> None:
@@ -133,7 +133,7 @@ class BilibiliNoteHelper:
 
         # 开始生成笔记
         token_info = [TokenInfo() for _ in range(len(config.tokens))]
-        runtime_timeline = await RuntimeTimeline.getRuntimeTimeline(timeline)
+        runtime_timeline = await RuntimeTimeline.getRuntimeTimeline(timeline, config)
 
         op_obj = NoteObject()
         # 生成每个分P的轴
@@ -221,7 +221,7 @@ class BilibiliNoteHelper:
                 song_dance_timeline = runtime_timeline.songAndDance()
                 if song_dance_timeline.items:
                     song_dance_obj = NoteObject()
-                    song_dance_obj += TimelineConverter.getTitleJson('本场歌舞快速导航', background="#ffa0d0")
+                    song_dance_obj += await getContentJson(config.song_dance_title)
                     for item in song_dance_timeline.items:
                         song_dance_obj += item.getObject()
                     final_submit_obj += song_dance_obj
@@ -233,7 +233,7 @@ class BilibiliNoteHelper:
                     if item.part_names != last_titles:
                         merged_titles = ' / '.join(item.part_names)
                         last_titles = item.part_names
-                        main_obj += TimelineConverter.getTitleJson(merged_titles, '#73fdea')
+                        main_obj += await getTitleJson(merged_titles, config)
                     main_obj += item.getObject()
                 final_submit_obj += main_obj
                 final_submit_obj.appendNewLine()

@@ -94,6 +94,26 @@
     "confirm": {
       "description": "发布前是否确认",
       "type": "boolean"
+    },
+    "titlePrefix": {
+      "description": "轴内标题前缀（含控制字）",
+      "type": "string"
+    },
+    "titlePostfix": {
+      "description": "轴内标题后缀",
+      "type": "string"
+    },
+    "subTitlePrefix": {
+      "description": "轴内小标题前缀（含控制字）",
+      "type": "string"
+    },
+    "subTitlePostfix": {
+      "description": "轴内小标题后缀",
+      "type": "string"
+    },
+    "songDanceTitle": {
+      "description": "歌舞导航标题",
+      "type": "string"
     }
   },
   "required": [
@@ -102,6 +122,6 @@
     "timeline",
     "cover",
     "publish",
-    "tokens"
+    "template"
   ]
 }

@@ -22,5 +22,10 @@
     "autoComment": true,
     "watch": false,
     "confirm": true,
-    "hidePart": false
+    "hidePart": false,
+    "titlePrefix": "[AC|b#fff359|s18]",
+    "titlePostfix": "",
+    "subTitlePrefix": "[AC|B]",
+    "subTitlePostfix": "",
+    "songDanceTitle": "[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　"
 }

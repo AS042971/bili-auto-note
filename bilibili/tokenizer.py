@@ -4,6 +4,7 @@ from typing import List
 import re
 from .note_object import NoteObject
 from .agent import BilibiliAgent
+from .pub_timeline_config import PubTimelineConfig
 import time
 
 async def getBvTitle(bvid: str) -> str:
@@ -143,8 +144,10 @@ def tokenizer(item: str) -> List[Token]:
     return tokens
 
 async def getContentJson(item: str) -> NoteObject:
-    note_obj = NoteObject()
     tokens = tokenizer(item)
+    return await getContentJsonInternal(tokens)
+async def getContentJsonInternal(tokens: List[Token]) -> NoteObject:
+    note_obj = NoteObject()
     align = None
     current_color = None
     current_bg = None
@@ -279,3 +282,18 @@ async def getContentJson(item: str) -> NoteObject:
     #     }, 18)
     note_obj.appendNewLine(align)
     return note_obj
+
+async def getSubTitleJson(item: str, config: PubTimelineConfig):
+    prefix = tokenizer(config.sub_title_prefix)
+    postfix = tokenizer(config.sub_title_postfix)
+    all_token = prefix
+    all_token.append(Token(TokenType.TEXT, item))
+    all_token.extend(postfix)
+    return await getContentJsonInternal(all_token)
+async def getTitleJson(item: str, config: PubTimelineConfig):
+    prefix = tokenizer(config.title_prefix)
+    postfix = tokenizer(config.title_postfix)
+    all_token = prefix
+    all_token.append(Token(TokenType.TEXT, item))
+    all_token.extend(postfix)
+    return await getContentJsonInternal(all_token)
