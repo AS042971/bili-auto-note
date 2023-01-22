@@ -21,8 +21,9 @@ class TokenType(Enum):
     NEW_LINE      = 1
 
     URL           = 10
-    BV_URL        = 11
-    IMAGE         = 12
+    URL_NAME      = 11
+    BV_URL        = 12
+    IMAGE         = 13
 
     SET_COLOR     = 20
     SET_BG        = 21
@@ -95,6 +96,8 @@ def tokenizer(item: str) -> List[Token]:
                             tokens.append(Token(TokenType.ALIGN_CENTER, ""))
                         if item == 'AR':
                             tokens.append(Token(TokenType.ALIGN_RIGHT, ""))
+                        if item.startswith('l'):
+                            tokens.append(Token(TokenType.URL_NAME, item[1:]))
                         if item.startswith('#'):
                             tokens.append(Token(TokenType.SET_COLOR, item))
                         if item.startswith('b#'):
@@ -150,6 +153,7 @@ async def getContentJson(item: str) -> NoteObject:
     current_italic = False
     current_strike = False
     current_underline = False
+    current_url_name = None
     has_link = False
 
     for token in tokens:
@@ -183,16 +187,22 @@ async def getContentJson(item: str) -> NoteObject:
             continue
         elif token.token_type == TokenType.URL:
             has_link = True
+            text = current_url_name if current_url_name else '🔗打开链接'
+            current_url_name = None
             attributes = {
                 "color": "#0b84ed",
-                "link": token.extra_info
+                "link": token.extra_info,
+                "underline": True
             }
             if align:
                 attributes['align'] = align
             note_obj.append({
                 "attributes": attributes,
-                "insert": '🔗打开链接'
+                "insert": text
             }, 1)
+            continue
+        elif token.token_type == TokenType.URL_NAME:
+            current_url_name = token.extra_info
             continue
         elif token.token_type == TokenType.BV_URL:
             has_link = True
@@ -260,12 +270,12 @@ async def getContentJson(item: str) -> NoteObject:
             current_color = None
             current_size = None
             continue
-    if has_link:
-        note_obj.append({
-            "attributes": {
-                "color": "#cccccc",
-            },
-            "insert": ' (手机端建议从评论回复中打开链接)'
-        }, 18)
+    # if has_link:
+    #     note_obj.append({
+    #         "attributes": {
+    #             "color": "#cccccc",
+    #         },
+    #         "insert": ' (手机端建议从评论回复中打开链接)'
+    #     }, 18)
     note_obj.appendNewLine(align)
     return note_obj
