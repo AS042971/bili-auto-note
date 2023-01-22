@@ -4,6 +4,7 @@ from typing import List
 import re
 from .note_object import NoteObject
 from .agent import BilibiliAgent
+import time
 
 async def getBvTitle(bvid: str) -> str:
     agent = BilibiliAgent()
@@ -16,14 +17,28 @@ async def getBvTitle(bvid: str) -> str:
     return video_info_res['title']
 
 class TokenType(Enum):
-    TEXT      = 0
-    NEW_LINE  = 1
-    URL       = 2
-    BV_URL    = 3
-    SET_COLOR = 4
-    SET_BOLD  = 5
-    SET_ITALIC= 6
-    RESET     = 7
+    TEXT          = 0
+    NEW_LINE      = 1
+
+    URL           = 10
+    BV_URL        = 11
+    IMAGE         = 12
+
+    SET_COLOR     = 20
+    SET_BG        = 21
+
+    SET_BOLD      = 30
+    SET_ITALIC    = 31
+    SET_UNDERLINE = 32
+    SET_STRIKE    = 33
+
+    ALIGN_LEFT    = 40
+    ALIGN_CENTER  = 41
+    ALIGN_RIGHT   = 42
+
+    SET_FONT_SIZE = 50
+
+    RESET         = 100
 
 @dataclass
 class Token:
@@ -70,8 +85,24 @@ def tokenizer(item: str) -> List[Token]:
                             tokens.append(Token(TokenType.SET_BOLD, ""))
                         if item == 'I':
                             tokens.append(Token(TokenType.SET_ITALIC, ""))
+                        if item == 'U':
+                            tokens.append(Token(TokenType.SET_UNDERLINE, ""))
+                        if item == 'S':
+                            tokens.append(Token(TokenType.SET_STRIKE, ""))
+                        if item == 'AL':
+                            tokens.append(Token(TokenType.ALIGN_LEFT, ""))
+                        if item == 'AC':
+                            tokens.append(Token(TokenType.ALIGN_CENTER, ""))
+                        if item == 'AR':
+                            tokens.append(Token(TokenType.ALIGN_RIGHT, ""))
                         if item.startswith('#'):
                             tokens.append(Token(TokenType.SET_COLOR, item))
+                        if item.startswith('b#'):
+                            tokens.append(Token(TokenType.SET_BG, item[1:]))
+                        if item.startswith('s'):
+                            tokens.append(Token(TokenType.SET_FONT_SIZE, item[1:]))
+                        if item.startswith('i'):
+                            tokens.append(Token(TokenType.IMAGE, item[1:]))
                     current_str = current_str[token_end+1:]
                     continue
             if current_str.startswith('http'):
@@ -111,9 +142,14 @@ def tokenizer(item: str) -> List[Token]:
 async def getContentJson(item: str) -> NoteObject:
     note_obj = NoteObject()
     tokens = tokenizer(item)
+    align = None
     current_color = None
+    current_bg = None
+    current_size = None
     current_bold = False
     current_italic = False
+    current_strike = False
+    current_underline = False
     has_link = False
 
     for token in tokens:
@@ -127,21 +163,34 @@ async def getContentJson(item: str) -> NoteObject:
                 attributes['bold'] = True
             if current_italic:
                 attributes['italic'] = True
+            if current_strike:
+                attributes['strike'] = True
+            if current_underline:
+                attributes['underline'] = True
+            if align:
+                attributes['align'] = align
+            if current_bg:
+                attributes['background'] = current_bg
+            if current_size:
+                attributes['size'] = current_size
             note_obj.append({
                 "attributes": attributes,
                 "insert": token.extra_info
             }, len(token.extra_info))
             continue
         elif token.token_type == TokenType.NEW_LINE:
-            note_obj.appendNewLine()
+            note_obj.appendNewLine(align)
             continue
         elif token.token_type == TokenType.URL:
             has_link = True
+            attributes = {
+                "color": "#0b84ed",
+                "link": token.extra_info
+            }
+            if align:
+                attributes['align'] = align
             note_obj.append({
-                "attributes": {
-                    "color": "#0b84ed",
-                    "link": token.extra_info
-                },
+                "attributes": attributes,
                 "insert": '🔗打开链接'
             }, 1)
             continue
@@ -149,27 +198,67 @@ async def getContentJson(item: str) -> NoteObject:
             has_link = True
             title = await getBvTitle(token.extra_info)
             title = '▶️' + title
+            attributes = {
+                "color": "#0b84ed",
+                "link": "https://www.bilibili.com/video/" + token.extra_info
+            }
+            if align:
+                attributes['align'] = align
             note_obj.append({
-                "attributes": {
-                    "color": "#0b84ed",
-                    "link": "https://www.bilibili.com/video/" + token.extra_info
-                },
+                "attributes": attributes,
                 "insert": title
             }, len(title))
             continue
+        elif token.token_type == TokenType.IMAGE:
+            note_obj.append({
+                "insert": {
+                    "imageUpload": {
+                        "url": "//api.bilibili.com/x/note/image?image_id=" + token.extra_info,
+                        "status": "done",
+                        "width": 315,
+                        "id": "IMAGE_" + str(round(time.time()*1000)),
+                        "source": "video"
+                    }
+                }
+            }, 1)
         elif token.token_type == TokenType.SET_BOLD:
             current_bold = True
             continue
         elif token.token_type == TokenType.SET_COLOR:
             current_color = token.extra_info
             continue
+        elif token.token_type == TokenType.SET_BG:
+            current_bg = token.extra_info
+            continue
         elif token.token_type == TokenType.SET_ITALIC:
             current_italic = True
             continue
+        elif token.token_type == TokenType.SET_STRIKE:
+            current_strike = True
+            continue
+        elif token.token_type == TokenType.SET_UNDERLINE:
+            current_underline = True
+            continue
+        elif token.token_type == TokenType.SET_FONT_SIZE:
+            current_size = token.extra_info + 'px'
+            continue
+        elif token.token_type == TokenType.ALIGN_LEFT:
+            align = None
+            continue
+        elif token.token_type == TokenType.ALIGN_CENTER:
+            align = 'center'
+            continue
+        elif token.token_type == TokenType.ALIGN_RIGHT:
+            align = 'right'
+            continue
         elif token.token_type == TokenType.RESET:
             current_bold = False
-            current_color = None
             current_italic = False
+            current_strike = False
+            current_underline = False
+            current_bg = None
+            current_color = None
+            current_size = None
             continue
     if has_link:
         note_obj.append({
@@ -178,5 +267,5 @@ async def getContentJson(item: str) -> NoteObject:
             },
             "insert": ' (手机端建议从评论回复中打开链接)'
         }, 18)
-    note_obj.appendNewLine()
+    note_obj.appendNewLine(align)
     return note_obj

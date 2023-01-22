@@ -14,6 +14,12 @@ class NoteObject:
         self.obj.append(obj)
         self.length += len
 
-    def appendNewLine(self) -> None:
-        self.obj.append({ "insert": "\n" })
+    def appendNewLine(self, align: str = None) -> None:
+        if not align:
+            self.obj.append({ "insert": "\n" })
+        else:
+            self.obj.append({
+                "attributes": { 'align': align },
+                "insert": "\n"
+            })
         self.length += 1
