@@ -37,6 +37,7 @@ class PubTimelineConfig:
         self.custom_video_info: str = json_data['customVideoInfo'] if 'customVideoInfo' in json_data else ''
         self.ignore_threshold: int = json_data['ignoreThreshold'] if 'ignoreThreshold' in json_data else 600
         self.hide_part: bool = json_data['hidePart'] if 'hidePart' in json_data else False
+        self.hide_part_title: bool = json_data['hidePartTitle'] if 'hidePartTitle' in json_data else False
 
         # 填充基础构架
         if 'songAndDanceAbstract' in json_data or 'jumpOP' in json_data or 'preface' in json_data or 'imgCover' in json_data or 'imgFooter' in json_data:

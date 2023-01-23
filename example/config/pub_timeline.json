@@ -23,6 +23,7 @@
     "watch": false,
     "confirm": true,
     "hidePart": false,
+    "hidePartTitle": false,
     "titlePrefix": "[AC|b#fff359|s18]",
     "titlePostfix": "",
     "subTitlePrefix": "[AC|B]",

@@ -179,7 +179,8 @@
         "autoComment": true,
         "watch": false,
         "confirm": false,
-        "hidePart": true,
+        "hidePart": false,
+        "hidePartTitle": false,
         "titlePrefix": "[AC|b#fff359|s18]",
         "titlePostfix": "",
         "subTitlePrefix": "[AC|B]",
@@ -211,6 +212,7 @@
 * `watch`: 是否监控视频和笔记更新。设置为`true`将自动监控视频分P和笔记文件的变化，每次目标视频分P变化或笔记文件更新时将自动更新笔记。当视频总分P数量等于offset设定值，并且笔记文件2小时未更新，则监控自动结束、程序退出
 * `confirm`: 是否弹出确认选项
 * `hidePart`: 隐藏时间标签中的分P标识。推荐在超过3个时间标签或者纯净/弹幕各1P时打开此项
+* `hidePartTitle`: 隐藏时间轴中的分P标签条。如果设置了此项，建议在template文件中手动添加总标题条。
 * `titlePrefix`等：控制轴内标题样式和歌舞导航标题样式。`Prefix`为前缀，`Postfix`为后缀
 
 ### template文件说明

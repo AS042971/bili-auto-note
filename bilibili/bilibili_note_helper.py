@@ -230,7 +230,7 @@ class BilibiliNoteHelper:
                 main_obj = NoteObject()
                 last_titles = []
                 for item in runtime_timeline:
-                    if item.part_names != last_titles:
+                    if item.part_names != last_titles and (not config.hide_part_title):
                         merged_titles = ' / '.join(item.part_names)
                         last_titles = item.part_names
                         main_obj += await getTitleJson(merged_titles, config)

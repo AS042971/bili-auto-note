@@ -79,6 +79,10 @@
       "description": "是否隐藏时间胶囊中的分P字段",
       "type": "boolean"
     },
+    "hidePartTitle": {
+      "description": "是否隐藏时间轴中的分P标题",
+      "type": "boolean"
+    },
     "publish": {
       "description": "是否自动发布",
       "type": "boolean"
