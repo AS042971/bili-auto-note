@@ -221,7 +221,8 @@ class BilibiliNoteHelper:
                 song_dance_timeline = runtime_timeline.songAndDance()
                 if song_dance_timeline.items:
                     song_dance_obj = NoteObject()
-                    song_dance_obj += await getContentJson(config.song_dance_title)
+                    song_dance_title, _ = await getContentJson(config.song_dance_title)
+                    song_dance_obj += song_dance_title
                     for item in song_dance_timeline.items:
                         song_dance_obj += item.getObject()
                     final_submit_obj += song_dance_obj
@@ -237,8 +238,22 @@ class BilibiliNoteHelper:
                     main_obj += item.getObject()
                 final_submit_obj += main_obj
                 final_submit_obj.appendNewLine()
+            elif line == '.. abstract':
+                abstract_obj = NoteObject()
+                for video_part in video_info.parts:
+                    part_labels = []
+                    for item in runtime_timeline.items:
+                        if video_part.index in item.abstract_time_obj:
+                            part_labels.append(item.abstract_time_obj[video_part.index])
+                    if part_labels:
+                        abstract_obj += await getTitleJson(video_part.title, config)
+                        for part_label in part_labels:
+                            abstract_obj.append(part_label, 1)
+                            abstract_obj.appendNewLine()
+                final_submit_obj += abstract_obj
+                final_submit_obj.appendNewLine()
             else:
-                line_obj = await getContentJson(line)
+                line_obj, _ = await getContentJson(line)
                 final_submit_obj += line_obj
 
         # 补全字数

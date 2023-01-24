@@ -1,5 +1,5 @@
 from .timeline import TimelineItem, Timeline
-from typing import Iterator, List
+from typing import Iterator, List, Tuple
 from .note_object import NoteObject
 from .video import VideoPartInfo
 from .timeline_converter import TimelineConverter
@@ -7,10 +7,11 @@ from .pub_timeline_config import PubTimelineConfig
 import time
 
 class RuntimeTimelineItem:
-    def __init__(self, item: TimelineItem, note_obj: NoteObject) -> None:
+    def __init__(self, item: TimelineItem, note_obj: Tuple[NoteObject, str]) -> None:
         self.item = item
-        self.note_obj = note_obj
+        self.note_obj, self.abstract = note_obj
         self.time_obj = []
+        self.abstract_time_obj = {}
         self.part_names = []
 
     def registerPartInfo(self, info: VideoPartInfo, start_time: int, token_index: int, customTitle: str, hidePart: bool) -> None:
@@ -57,6 +58,24 @@ class RuntimeTimelineItem:
                 }
             }
         self.time_obj.append(time_label)
+        if self.abstract:
+            abstarct_label = {
+                "insert": {
+                    "tag": {
+                        "cid": info.cid,
+                        "oid_type": 2,
+                        "status": 0,
+                        "index": info.index,
+                        "seconds": local_sec,
+                        "cidCount": 1,
+                        "key": str(round(time.time()*1000)),
+                        "title": "",
+                        "epid": 0,
+                        "desc": self.abstract
+                    }
+                }
+            }
+            self.abstract_time_obj[info.index] = abstarct_label
 
     def getObject(self) -> NoteObject:
         if not self.time_obj:

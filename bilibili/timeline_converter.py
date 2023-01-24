@@ -10,10 +10,11 @@ from .pub_timeline_config import PubTimelineConfig
 
 class TimelineConverter:
     @staticmethod
-    async def getTimelineItemJson(item: TimelineItem, config: PubTimelineConfig) -> NoteObject:
+    async def getTimelineItemJson(item: TimelineItem, config: PubTimelineConfig) -> Tuple[NoteObject, str]:
         tagContent = item.tag
         if tagContent.startswith('##'):
-            return await getSubTitleJson(tagContent[2:], config)
+            item_obj = await getSubTitleJson(tagContent[2:], config)
+            return item_obj, None
         return await getContentJson(tagContent)
 
     @staticmethod

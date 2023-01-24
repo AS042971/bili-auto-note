@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 import re
 from .note_object import NoteObject
 from .agent import BilibiliAgent
@@ -143,10 +143,10 @@ def tokenizer(item: str) -> List[Token]:
     tokens.append(current_token)
     return tokens
 
-async def getContentJson(item: str) -> NoteObject:
+async def getContentJson(item: str) -> Tuple[NoteObject, str]:
     tokens = tokenizer(item)
     return await getContentJsonInternal(tokens)
-async def getContentJsonInternal(tokens: List[Token]) -> NoteObject:
+async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     note_obj = NoteObject()
     align = None
     current_color = None
@@ -158,6 +158,8 @@ async def getContentJsonInternal(tokens: List[Token]) -> NoteObject:
     current_underline = False
     current_url_name = None
     has_link = False
+    abstract_string = ""
+    abstract_finished = False
 
     for token in tokens:
         if token.token_type == TokenType.TEXT:
@@ -184,9 +186,12 @@ async def getContentJsonInternal(tokens: List[Token]) -> NoteObject:
                 "attributes": attributes,
                 "insert": token.extra_info
             }, len(token.extra_info))
+            if not abstract_finished:
+                abstract_string += token.extra_info
             continue
         elif token.token_type == TokenType.NEW_LINE:
             note_obj.appendNewLine(align)
+            abstract_finished = True
             continue
         elif token.token_type == TokenType.URL:
             has_link = True
@@ -281,7 +286,7 @@ async def getContentJsonInternal(tokens: List[Token]) -> NoteObject:
     #         "insert": ' (手机端建议从评论回复中打开链接)'
     #     }, 18)
     note_obj.appendNewLine(align)
-    return note_obj
+    return note_obj, abstract_string
 
 async def getSubTitleJson(item: str, config: PubTimelineConfig):
     prefix = tokenizer(config.sub_title_prefix)
@@ -289,11 +294,13 @@ async def getSubTitleJson(item: str, config: PubTimelineConfig):
     all_token = prefix
     all_token.append(Token(TokenType.TEXT, item))
     all_token.extend(postfix)
-    return await getContentJsonInternal(all_token)
+    obj, abstract = await getContentJsonInternal(all_token)
+    return obj
 async def getTitleJson(item: str, config: PubTimelineConfig):
     prefix = tokenizer(config.title_prefix)
     postfix = tokenizer(config.title_postfix)
     all_token = prefix
     all_token.append(Token(TokenType.TEXT, item))
     all_token.extend(postfix)
-    return await getContentJsonInternal(all_token)
+    obj, abstract =  await getContentJsonInternal(all_token)
+    return obj
