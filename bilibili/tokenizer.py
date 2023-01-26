@@ -145,6 +145,10 @@ def tokenizer(item: str) -> List[Token]:
 
 async def getContentJson(item: str) -> Tuple[NoteObject, str]:
     tokens = tokenizer(item)
+    if len(tokens) == 4:
+        if tokens[1].token_type == TokenType.TEXT and (tokens[1].extra_info == '🎤' or tokens[1].extra_info == '💃'):
+            if tokens[2].token_type == TokenType.IMAGE:
+                tokens = [tokens[2]]
     return await getContentJsonInternal(tokens)
 async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     note_obj = NoteObject()
@@ -160,8 +164,10 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     has_link = False
     abstract_string = ""
     abstract_finished = False
+    last_image = False
 
     for token in tokens:
+        last_image = False
         if token.token_type == TokenType.TEXT:
             if not token.extra_info:
                 continue
@@ -228,6 +234,7 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
             }, len(title))
             continue
         elif token.token_type == TokenType.IMAGE:
+            last_image = True
             note_obj.append({
                 "insert": {
                     "imageUpload": {
@@ -285,7 +292,8 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     #         },
     #         "insert": ' (手机端建议从评论回复中打开链接)'
     #     }, 18)
-    note_obj.appendNewLine(align)
+    if not last_image:
+        note_obj.appendNewLine(align)
     return note_obj, abstract_string
 
 async def getSubTitleJson(item: str, config: PubTimelineConfig):
