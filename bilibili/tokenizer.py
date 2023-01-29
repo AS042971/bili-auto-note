@@ -145,10 +145,15 @@ def tokenizer(item: str) -> List[Token]:
 
 async def getContentJson(item: str) -> Tuple[NoteObject, str]:
     tokens = tokenizer(item)
-    if len(tokens) == 4:
+    if len(tokens) >= 4:
         if tokens[1].token_type == TokenType.TEXT and (tokens[1].extra_info == '🎤' or tokens[1].extra_info == '💃'):
             if tokens[2].token_type == TokenType.IMAGE:
-                tokens = [tokens[2]]
+                if len(tokens) == 4 and tokens[3].extra_info == '':
+                    tokens = [tokens[2]]
+                else:
+                    raw_tokens = tokens
+                    tokens = [tokens[0], tokens[2], tokens[1]]
+                    tokens.extend(raw_tokens[3:])
     return await getContentJsonInternal(tokens)
 async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     note_obj = NoteObject()
@@ -164,10 +169,18 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
     has_link = False
     abstract_string = ""
     abstract_finished = False
+    last_token_type = TokenType.NEW_LINE
     last_image = False
 
     for token in tokens:
-        last_image = False
+        if token.token_type == TokenType.TEXT and token.extra_info == '':
+            continue
+        # if last_token_type == TokenType.IMAGE and token.token_type != TokenType.NEW_LINE:
+        #     note_obj.appendNewLine(align)
+        if token.token_type == TokenType.IMAGE and last_token_type != TokenType.NEW_LINE:
+            note_obj.appendNewLine(align)
+        last_token_type = token.token_type
+
         if token.token_type == TokenType.TEXT:
             if not token.extra_info:
                 continue
@@ -234,7 +247,6 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
             }, len(title))
             continue
         elif token.token_type == TokenType.IMAGE:
-            last_image = True
             note_obj.append({
                 "insert": {
                     "imageUpload": {
@@ -285,14 +297,7 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
             current_color = None
             current_size = None
             continue
-    # if has_link:
-    #     note_obj.append({
-    #         "attributes": {
-    #             "color": "#cccccc",
-    #         },
-    #         "insert": ' (手机端建议从评论回复中打开链接)'
-    #     }, 18)
-    if not last_image:
+    if not last_token_type == TokenType.IMAGE:
         note_obj.appendNewLine(align)
     return note_obj, abstract_string
 
