@@ -133,7 +133,7 @@ class BilibiliNoteHelper:
 
         # 开始生成笔记
         token_info = [TokenInfo() for _ in range(len(config.tokens))]
-        runtime_timeline = await RuntimeTimeline.getRuntimeTimeline(timeline, config)
+        runtime_timeline = await RuntimeTimeline.getRuntimeTimeline(timeline, config, agent)
 
         op_obj = NoteObject()
         # 生成每个分P的轴
@@ -221,7 +221,7 @@ class BilibiliNoteHelper:
                 song_dance_timeline = runtime_timeline.songAndDance()
                 if song_dance_timeline.items:
                     song_dance_obj = NoteObject()
-                    song_dance_title, _ = await getContentJson(config.song_dance_title)
+                    song_dance_title, _ = await getContentJson(config.song_dance_title, agent)
                     song_dance_obj += song_dance_title
                     for item in song_dance_timeline.items:
                         song_dance_obj += item.getObject()
@@ -253,7 +253,7 @@ class BilibiliNoteHelper:
                 final_submit_obj += abstract_obj
                 final_submit_obj.appendNewLine()
             else:
-                line_obj, _ = await getContentJson(line)
+                line_obj, _ = await getContentJson(line, agent)
                 final_submit_obj += line_obj
 
         # 补全字数

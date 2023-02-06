@@ -6,6 +6,17 @@ from .note_object import NoteObject
 from .agent import BilibiliAgent
 from .pub_timeline_config import PubTimelineConfig
 import time
+import os
+
+async def uploadImage(img_path: str, agent: BilibiliAgent) -> Tuple[bool, str]:
+    if not os.path.exists(img_path):
+        print(f'图片{img_path}未找到')
+        return False, None
+    result = await agent.post('https://api.bilibili.com/x/note/image/upload', data={
+        "file": open(img_path,"rb"),
+        "csrf": agent.csrf
+    })
+    return True, result["location"]
 
 async def getBvTitle(bvid: str) -> str:
     agent = BilibiliAgent()
@@ -25,6 +36,7 @@ class TokenType(Enum):
     URL_NAME      = 11
     BV_URL        = 12
     IMAGE         = 13
+    IMAGE_UPLOAD  = 14
 
     SET_COLOR     = 20
     SET_BG        = 21
@@ -107,6 +119,8 @@ def tokenizer(item: str) -> List[Token]:
                             tokens.append(Token(TokenType.SET_FONT_SIZE, item[1:]))
                         if item.startswith('i'):
                             tokens.append(Token(TokenType.IMAGE, item[1:]))
+                        if item.startswith('u'):
+                            tokens.append(Token(TokenType.IMAGE_UPLOAD, item[1:]))
                     current_str = current_str[token_end+1:]
                     continue
             if current_str.startswith('http'):
@@ -143,19 +157,19 @@ def tokenizer(item: str) -> List[Token]:
     tokens.append(current_token)
     return tokens
 
-async def getContentJson(item: str) -> Tuple[NoteObject, str]:
+async def getContentJson(item: str, agent: BilibiliAgent = None) -> Tuple[NoteObject, str]:
     tokens = tokenizer(item)
     if len(tokens) >= 4:
         if tokens[1].token_type == TokenType.TEXT and (tokens[1].extra_info == '🎤' or tokens[1].extra_info == '💃'):
-            if tokens[2].token_type == TokenType.IMAGE:
+            if (tokens[2].token_type == TokenType.IMAGE or tokens[2].token_type == TokenType.IMAGE_UPLOAD):
                 if len(tokens) == 4 and tokens[3].extra_info == '':
                     tokens = [tokens[2]]
                 else:
                     raw_tokens = tokens
                     tokens = [tokens[0], tokens[2], tokens[1]]
                     tokens.extend(raw_tokens[3:])
-    return await getContentJsonInternal(tokens)
-async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
+    return await getContentJsonInternal(tokens, agent)
+async def getContentJsonInternal(tokens: List[Token], agent: BilibiliAgent = None) -> Tuple[NoteObject, str]:
     note_obj = NoteObject()
     align = None
     current_color = None
@@ -177,7 +191,7 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
             continue
         # if last_token_type == TokenType.IMAGE and token.token_type != TokenType.NEW_LINE:
         #     note_obj.appendNewLine(align)
-        if token.token_type == TokenType.IMAGE and last_token_type != TokenType.NEW_LINE:
+        if (token.token_type == TokenType.IMAGE or token.token_type == TokenType.IMAGE_UPLOAD) and last_token_type != TokenType.NEW_LINE:
             note_obj.appendNewLine(align)
         last_token_type = token.token_type
 
@@ -258,6 +272,22 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
                     }
                 }
             }, 1)
+            continue
+        elif token.token_type == TokenType.IMAGE_UPLOAD:
+            result, url = await uploadImage(token.extra_info, agent)
+            if result:
+                note_obj.append({
+                    "insert": {
+                        "imageUpload": {
+                            "url": url,
+                            "status": "done",
+                            "width": 315,
+                            "id": "IMAGE_" + str(round(time.time()*1000)),
+                            "source": "video"
+                        }
+                    }
+                }, 1)
+            continue
         elif token.token_type == TokenType.SET_BOLD:
             current_bold = True
             continue
@@ -297,23 +327,23 @@ async def getContentJsonInternal(tokens: List[Token]) -> Tuple[NoteObject, str]:
             current_color = None
             current_size = None
             continue
-    if not last_token_type == TokenType.IMAGE:
+    if not (last_token_type == TokenType.IMAGE or last_token_type == TokenType.IMAGE_UPLOAD):
         note_obj.appendNewLine(align)
     return note_obj, abstract_string
 
-async def getSubTitleJson(item: str, config: PubTimelineConfig):
+async def getSubTitleJson(item: str, config: PubTimelineConfig, agent: BilibiliAgent = None):
     prefix = tokenizer(config.sub_title_prefix)
     postfix = tokenizer(config.sub_title_postfix)
     all_token = prefix
     all_token.append(Token(TokenType.TEXT, item))
     all_token.extend(postfix)
-    obj, abstract = await getContentJsonInternal(all_token)
+    obj, abstract = await getContentJsonInternal(all_token, agent)
     return obj
-async def getTitleJson(item: str, config: PubTimelineConfig):
+async def getTitleJson(item: str, config: PubTimelineConfig, agent: BilibiliAgent = None):
     prefix = tokenizer(config.title_prefix)
     postfix = tokenizer(config.title_postfix)
     all_token = prefix
     all_token.append(Token(TokenType.TEXT, item))
     all_token.extend(postfix)
-    obj, abstract =  await getContentJsonInternal(all_token)
+    obj, abstract =  await getContentJsonInternal(all_token, agent)
     return obj

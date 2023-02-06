@@ -7,15 +7,16 @@ from .video import VideoPartInfo
 from .tokenizer import getContentJson, getSubTitleJson
 from .note_object import NoteObject
 from .pub_timeline_config import PubTimelineConfig
+from .agent import BilibiliAgent
 
 class TimelineConverter:
     @staticmethod
-    async def getTimelineItemJson(item: TimelineItem, config: PubTimelineConfig) -> Tuple[NoteObject, str]:
+    async def getTimelineItemJson(item: TimelineItem, config: PubTimelineConfig, agent: BilibiliAgent = None) -> Tuple[NoteObject, str]:
         tagContent = item.tag
         if tagContent.startswith('##'):
             item_obj = await getSubTitleJson(tagContent[2:], config)
             return item_obj, None
-        return await getContentJson(tagContent)
+        return await getContentJson(tagContent, agent)
 
     @staticmethod
     def loadTimelineFromCSV(path: str) -> Timeline:

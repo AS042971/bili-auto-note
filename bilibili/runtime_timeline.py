@@ -4,6 +4,7 @@ from .note_object import NoteObject
 from .video import VideoPartInfo
 from .timeline_converter import TimelineConverter
 from .pub_timeline_config import PubTimelineConfig
+from .agent import BilibiliAgent
 import time
 
 class RuntimeTimelineItem:
@@ -114,10 +115,10 @@ class RuntimeTimeline:
         return RuntimeTimeline(sd_items)
 
     @staticmethod
-    async def getRuntimeTimeline(timeline: Timeline, config: PubTimelineConfig) -> 'RuntimeTimeline':
+    async def getRuntimeTimeline(timeline: Timeline, config: PubTimelineConfig, agent: BilibiliAgent = None) -> 'RuntimeTimeline':
         converted_items = []
         for item in timeline:
-            note_obj = await TimelineConverter.getTimelineItemJson(item, config)
+            note_obj = await TimelineConverter.getTimelineItemJson(item, config, agent)
             converted_items.append(RuntimeTimelineItem(item, note_obj))
         return RuntimeTimeline(converted_items)
 
