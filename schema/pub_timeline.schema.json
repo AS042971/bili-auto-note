@@ -118,6 +118,10 @@
     "songDanceTitle": {
       "description": "歌舞导航标题",
       "type": "string"
+    },
+    "legacyCommentStyle": {
+      "description": "是否使用传统的评论区样式",
+      "type": "boolean"
     }
   },
   "required": [

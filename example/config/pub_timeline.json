@@ -28,5 +28,6 @@
     "titlePostfix": "",
     "subTitlePrefix": "[AC|B]",
     "subTitlePostfix": "",
-    "songDanceTitle": "[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　"
+    "songDanceTitle": "[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　",
+    "legacyCommentStyle": false
 }

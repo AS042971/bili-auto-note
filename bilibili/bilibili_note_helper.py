@@ -274,6 +274,7 @@ class BilibiliNoteHelper:
             final_submit_obj.length = 311
 
         submit_obj_str = json.dumps(final_submit_obj.obj, indent=None, ensure_ascii=False, separators=(',', ':'))
+        comment_format = 1 if config.legacy_comment_style else 2
         data = {
             "oid": video_info.aid,
             "note_id": note_id,
@@ -285,7 +286,7 @@ class BilibiliNoteHelper:
             "hash": str(round(time.time()*1000)),
             "publish": 1 if config.publish else 0,
             "auto_comment": 1 if (config.publish and config.auto_comment) else 0,
-            "comment_format": 2
+            "comment_format": comment_format
         }
         await asyncio.sleep(1)
         submit_res = await agent.post("https://api.bilibili.com/x/note/add", data=data)

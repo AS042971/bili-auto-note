@@ -186,7 +186,8 @@
         "titlePostfix": "",
         "subTitlePrefix": "[AC|B]",
         "subTitlePostfix": "",
-        "songDanceTitle": "[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　"
+        "songDanceTitle": "[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　",
+        "legacyCommentStyle": false
     }
 
 ### 配置文件说明
@@ -215,6 +216,7 @@
 * `hidePart`: 隐藏时间标签中的分P标识。推荐在超过3个时间标签或者纯净/弹幕各1P时打开此项
 * `hidePartTitle`: 隐藏时间轴中的分P标签条。如果设置了此项，建议在template文件中手动添加总标题条。
 * `titlePrefix`等：控制轴内标题样式和歌舞导航标题样式。`Prefix`为前缀，`Postfix`为后缀
+* `legacyCommentStyle`: 是否使用传统评论区样式。开启后评论区将不显示图片，但点击蓝字可以打开可跳转面板
 
 ### template文件说明
 

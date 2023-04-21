@@ -49,6 +49,7 @@ class PubTimelineConfig:
         self.sub_title_prefix: str = json_data['subTitlePrefix'] if 'subTitlePrefix' in json_data else '[AC|B]'
         self.sub_title_postfix: str = json_data['subTitlePostfix'] if 'subTitlePostfix' in json_data else ''
         self.song_dance_title: str = json_data['songDanceTitle'] if 'songDanceTitle' in json_data else '[AC|B|b#ffa0d0|s18]　　　本场歌舞快速导航　　　'
+        self.legacy_comment_style = json_data['legacyCommentStyle'] if 'legacyCommentStyle' in json_data else False
 
         # 发布选项
         self.auto_comment: bool = json_data['autoComment'] if 'autoComment' in json_data else True
